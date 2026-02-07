@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Greenhouse ERP - Sign In</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#3FA118", // Fresh green from the "Sign In" button in reference
+              secondary: "#2D7A10", // Darker green for hover/active states
+              "background-light": "#F3F7F2", // Very light greenish-grey
+              "background-dark": "#0F1A12", // Dark forest green/black
+              "surface-light": "rgba(255, 255, 255, 0.85)",
+              "surface-dark": "rgba(30, 40, 30, 0.85)",
+            },
+            fontFamily: {
+              display: ["Inter", "sans-serif"],
+              body: ["Inter", "sans-serif"],
+            },
+            borderRadius: {
+              DEFAULT: "16px",
+              xl: "24px",
+              "2xl": "32px",
+            },
+            backdropBlur: {
+              xs: "2px",
+            },
+          },
+        },
+      };
+    </script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons+Round"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      .glass-panel {
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+      .dark .glass-panel {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+    </style>
+    <style>
+      body {
+        min-height: max(884px, 100dvh);
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gray-100 dark:bg-gray-900 h-screen w-full flex items-center justify-center overflow-hidden relative font-body transition-colors duration-300"
+  >
+    <div class="absolute inset-0 z-0">
+      <img
+        alt="Blurred greenhouse background with lush green plants"
+        class="w-full h-full object-cover filter blur-[2px] scale-105"
+        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZ5YdqedWaLaxWBve1avgbe04sGZpMj18gPZO0yr6JousL2HtjMt1VAa5JfH_vE-QWoOYn54ORxiHVCYGQdjo4m4zuypl2uyss4-ZldHqnNnei80M1xPj5NzjSx3DcD-b-W-sypWp-X-4g-RGOSMLhhCTnzgcE5PSD5Mob9MmC1AInMygwZdhm3NVy4PsxFLM7WPmO-TFu0n4sKV5tvED8CWYS287GhN3GTUi-AW6jn78jQHpE5mYqz5f9mRNxgs4OE2l0JuNbm10"
+      />
+      <div class="absolute inset-0 bg-black/20 dark:bg-black/50"></div>
+      <div
+        class="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-black/60 to-transparent"
+      ></div>
+    </div>
+    <div
+      class="relative z-10 w-full h-full sm:max-w-[400px] sm:h-[850px] sm:rounded-[40px] overflow-hidden shadow-2xl bg-transparent flex flex-col justify-end"
+    >
+      <div
+        class="absolute top-0 left-0 right-0 p-8 pt-16 flex flex-col items-center justify-center text-white z-20"
+      >
+        <div class="flex items-center gap-2 mb-2">
+          <span class="text-3xl font-bold tracking-tight">Greenland</span>
+          <span class="material-icons-round text-primary text-3xl">eco</span>
+        </div>
+        <p class="text-white/80 text-sm font-light">Smart Farming Solutions</p>
+      </div>
+      <div
+        class="w-full bg-surface-light dark:bg-surface-dark glass-panel rounded-t-[40px] p-8 pb-10 flex flex-col gap-6 animate-fade-in-up shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-colors duration-300"
+      >
+        <div class="mt-2">
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            Welcome Back.
+          </h1>
+          <p class="text-gray-500 dark:text-gray-400 text-sm">
+            Enter your email and password to access your farm dashboard.
+          </p>
+        </div>
+        <form class="flex flex-col gap-4">
+          <div class="group relative">
+            <div
+              class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"
+            >
+              <span
+                class="material-icons-round text-gray-400 dark:text-gray-500 group-focus-within:text-primary transition-colors"
+                >mail_outline</span
+              >
+            </div>
+            <input
+              class="w-full pl-12 pr-4 py-4 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all shadow-sm"
+              placeholder="Email address"
+              required=""
+              type="email"
+            />
+          </div>
+          <div class="group relative">
+            <div
+              class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"
+            >
+              <span
+                class="material-icons-round text-gray-400 dark:text-gray-500 group-focus-within:text-primary transition-colors"
+                >lock_outline</span
+              >
+            </div>
+            <input
+              class="w-full pl-12 pr-12 py-4 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all shadow-sm"
+              placeholder="Password"
+              required=""
+              type="password"
+            />
+            <div
+              class="absolute inset-y-0 right-0 pr-4 flex items-center cursor-pointer"
+            >
+              <span
+                class="material-icons-round text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 text-lg"
+                >visibility_off</span
+              >
+            </div>
+          </div>
+          <div class="flex justify-end">
+            <a
+              class="text-sm font-medium text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+              href="#"
+              >Forgot Password?</a
+            >
+          </div>
+          <button
+            class="mt-2 w-full bg-primary hover:bg-secondary text-white font-semibold py-4 rounded-full shadow-lg shadow-primary/30 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
+            type="button"
+          >
+            Sign In
+          </button>
+        </form>
+        <div class="relative flex py-2 items-center">
+          <div
+            class="flex-grow border-t border-gray-300 dark:border-gray-700"
+          ></div>
+          <span
+            class="flex-shrink-0 mx-4 text-gray-400 dark:text-gray-500 text-xs font-medium"
+            >Or</span
+          >
+          <div
+            class="flex-grow border-t border-gray-300 dark:border-gray-700"
+          ></div>
+        </div>
+        <div class="flex justify-center gap-6">
+          <button
+            class="w-12 h-12 rounded-full bg-white dark:bg-white/10 border border-gray-200 dark:border-white/10 flex items-center justify-center shadow-sm hover:bg-gray-50 dark:hover:bg-white/20 transition-all"
+          >
+            <img
+              alt="Google"
+              class="w-6 h-6"
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4Ycde1vM4BNMeWJNfztoVtKy-t3YCi7dtyGq1DptryygXtSQ9Tk2Klttb9o22xLu2ahCNvboc3d7y0cFJJBuMAvLLKH66SD4Cv9f_ICxyLcCYF3ERP_YxmOwbGneSliMjTNB6sI6Fuewi020zV6a13sOrEvbw2o6d0ncOYgWrlItgWi-xGgeE3sJao5cde7I7YXeH1Joigfq2qILI3t1Do6Jc_wax9k7psYbNpp2lj2SDaYYgvAJ9fVBi0sY-jXrb0tj2MuAOq-8"
+            />
+          </button>
+          <button
+            class="w-12 h-12 rounded-full bg-white dark:bg-white/10 border border-gray-200 dark:border-white/10 flex items-center justify-center shadow-sm hover:bg-gray-50 dark:hover:bg-white/20 transition-all"
+          >
+            <img
+              alt="Facebook"
+              class="w-6 h-6"
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCtYpYwa5apWgIuMX-SXv6A_cmc8qMExcvhCcBjUyv3H363V1MVlbut7M74y-Vph-p1itAZy9zETY-qFXKpGYrBVPBiMVOBCBR6VMG0O6i5ErdWOEJysyemZeKgcROLfnABiKPyNYCDG0AEZhlK9YxqKDRH4pyW2za4D8r4vgfjkyZeK429Jd5ITlDwfAJnZJWC5Y3VVJnwQC07s6SWcSxm2zhJuCov8auKRly7wbaF3g8gNRWBNCOf8y5abLobOyUG4KFNx-3v6zE"
+            />
+          </button>
+        </div>
+        <div class="text-center mt-2">
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            Don't have an account?
+            <a
+              class="font-semibold text-primary hover:text-secondary transition-colors"
+              href="#"
+              >Sign Up</a
+            >
+          </p>
+        </div>
+        <div class="h-4 w-full"></div>
+      </div>
+    </div>
+  </body>
+</html>

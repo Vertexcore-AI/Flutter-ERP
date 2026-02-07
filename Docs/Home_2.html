@@ -1,0 +1,164 @@
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>GreenGrow ERP Landing Page</title>
+    <!-- BEGIN: External Resources -->
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap"
+      rel="stylesheet"
+    />
+    <!-- Tailwind CSS v3 with Plugins -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Tailwind Configuration for Custom Colors and Fonts -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+            },
+            colors: {
+              "brand-green": "#5cdb5c",
+              "brand-green-hover": "#4bc94b",
+            },
+          },
+        },
+      };
+    </script>
+    <!-- END: External Resources -->
+    <!-- BEGIN: Custom Styles -->
+    <style data-purpose="layout">
+      /* Ensure full viewport height for mobile experience */
+      body,
+      html {
+        height: 100%;
+        margin: 0;
+        overflow: hidden; /* Prevent scrolling for this specific landing view */
+      }
+    </style>
+    <style data-purpose="glass-effect">
+      /* Custom utility for the glassy header pill */
+      .glass-pill {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+    </style>
+    <!-- END: Custom Styles -->
+    <style>
+      body {
+        min-height: max(884px, 100dvh);
+      }
+    </style>
+  </head>
+  <body class="bg-gray-900 font-sans text-white h-screen w-full relative">
+    <!-- BEGIN: Background Layer -->
+    <div
+      class="absolute inset-0 z-0 h-full w-full"
+      data-purpose="background-container"
+    >
+      <!-- Background Image -->
+      <!-- Note: Using placeholder because specific data variable was requested but likely not injected by the system, defaulting to a robust placeholder strategy if the variable fails -->
+      <img
+        alt="Greenhouse Background"
+        class="object-cover w-full h-full"
+        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBiB8iVk-UPp6B-OjLfpXXhIvdP1zDsRqnw_mahfgWNc7Ljz-h-poQ8bL3efgsm7w4l67grKrIV4Stjixg8O2k8V_vSV4pK1bOkmpTeSM5YgMCgUDrrbRg7oYQjXDy3POLInEDujQKMNXUcVw8pnEsPC6vBlrL6_xhxW11DA_LRopkmvjXKIBEupC6-Ekz1FegniBwcZxqzlScZrmPqfCiQhTXkyBt_zZwcSaUWwHwxlYMOKcM8NELgC0MYLsYjeA41vPPD9wjRnbI"
+      />
+      <!-- Gradient Overlay for readability -->
+      <div
+        class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/90"
+      ></div>
+    </div>
+    <!-- END: Background Layer -->
+    <!-- BEGIN: Main Container -->
+    <!-- Using flex-col and justify-between to push header to top and content to bottom -->
+    <main class="relative z-10 h-full flex flex-col justify-between p-6 pb-10">
+      <!-- BEGIN: Header Badge -->
+      <header class="flex justify-start pt-4">
+        <!-- Glassmorphism Pill Badge -->
+        <div
+          class="glass-pill rounded-full px-3 py-1.5 flex items-center space-x-2 px-4 py-2"
+          data-purpose="brand-badge"
+        >
+          <!-- Leaf Icon (SVG) -->
+          <svg
+            class="h-4 w-4 text-white"
+            fill="currentColor"
+            viewbox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M17.457 4.108C17.06 4.028 12.333 4 12.333 4a.833.833 0 0 0-.833.833v2.5s-4.64.085-7.14 2.585c-2.5 2.5-2.5 6.667-2.5 6.667s.945.724 3.333-.834c0 0 1.945-1.42 3.611-3.333.313 1.933 1.167 4.167 3.333 5.833 2.5 1.923 6.667 1.667 6.667 1.667s-.085-4.64-2.585-7.14c-1.39-1.39-2.91-2.028-4.228-2.317V5.667a.833.833 0 0 0-.66-1.558z"
+            ></path>
+          </svg>
+          <span
+            class="font-bold tracking-widest uppercase text-white leading-none text-[12px]"
+            >Greengrow ERP</span
+          >
+        </div>
+      </header>
+      <!-- END: Header Badge -->
+      <!-- BEGIN: Bottom Content Area -->
+      <section class="flex flex-col space-y-6" data-purpose="content-display">
+        <!-- Text Content -->
+        <div class="space-y-2">
+          <h1 class="text-4xl font-bold tracking-tight leading-[1.1]">
+            <span class="text-white block">Precision</span>
+            <span class="block text-[#5cdb5c]">Automation</span>
+          </h1>
+          <p class="text-gray-300 text-base leading-relaxed max-w-[90%]">
+            Automate irrigation, lighting, and climate controls to ensure
+            optimal growth conditions 24/7.
+          </p>
+        </div>
+        <!-- Pagination Indicators -->
+        <div class="flex items-center space-x-2" data-purpose="pagination-dots">
+          <div class="h-1 w-5 bg-[#ffffff50] rounded-full"></div>
+          <div class="h-1 w-5 bg-[#4CAF50] rounded-full"></div>
+          <div class="h-2 w-2 bg-[#ffffff50] rounded-full"></div>
+          <div class="h-2 w-2 bg-[#ffffff50] rounded-full"></div>
+        </div>
+        <!-- Action Area -->
+        <div class="pt-4 space-y-6">
+          <!-- CTA Button -->
+          <button
+            class="w-full bg-brand-green hover:bg-brand-green-hover transition-colors text-white font-bold py-4 px-6 flex items-center justify-center space-x-2 group shadow-lg shadow-green-900/20 hover:bg-[#388E3C] bg-[#5cdb5c] rounded-full"
+          >
+            <span>Get Started</span>
+            <!-- Arrow Icon -->
+            <svg
+              class="h-5 w-5 transform group-hover:translate-x-1 transition-transform"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewbox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M14 5l7 7m0 0l-7 7m7-7H3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              ></path>
+            </svg>
+          </button>
+          <!-- Login Link -->
+          <div class="text-center text-sm">
+            <span class="text-gray-400">Already have an account?</span>
+            <a class="text-white font-bold ml-1 hover:underline" href="#"
+              >Log In</a
+            >
+          </div>
+        </div>
+      </section>
+      <!-- END: Bottom Content Area -->
+    </main>
+    <!-- END: Main Container -->
+  </body>
+</html>
