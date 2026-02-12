@@ -1,0 +1,77 @@
+{
+    "mcpServers": {
+        "filesystem": {
+            "command": "node",
+            "args": [
+                "C:\\Users\\user\\AppData\\Roaming\\npm\\node_modules\\@modelcontextprotocol\\server-filesystem\\dist\\index.js",
+                "E:\\Herd\\ERP-Flutter\\my_app"
+            ]
+        },
+        "MCP SQLite Server": {
+            "type": "stdio",
+            "command": "node",
+            "args": [
+                "C:\\Users\\user\\AppData\\Roaming\\npm\\node_modules\\mcp-sqlite\\mcp-sqlite-server.js",
+                "data\\admin.sqlite"
+            ]
+        },
+        "context7": {
+            "command": "node",
+            "args": [
+                "C:\\Users\\user\\AppData\\Roaming\\npm\\node_modules\\@upstash\\context7-mcp\\dist\\index.js"
+            ]
+        },
+        "dart": {
+            "command": "dart",
+            "args": [
+                "mcp-server"
+            ]
+        },
+        "playwright": {
+            "command": "cmd",
+            "args": [
+                "/c",
+                "npx",
+                "-y",
+                "@playwright/mcp@latest"
+            ]
+        },
+        "mcp-freepik": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "mcp-remote",
+                "https://api.freepik.com/mcp",
+                "--header",
+                "x-freepik-api-key:${FREEPIK_API_KEY}"
+            ],
+            "env": {
+                "FREEPIK_API_KEY": "FPSXf2c55528d958da64bb019b360a80747b"
+            }
+        },
+        "imagesorcery-mcp": {
+            "command": "imagesorcery-mcp",
+            "transportType": "stdio",
+            "autoApprove": [
+                "blur",
+                "change_color",
+                "config",
+                "crop",
+                "detect",
+                "draw_arrows",
+                "draw_circles",
+                "draw_lines",
+                "draw_rectangles",
+                "draw_texts",
+                "fill",
+                "find",
+                "get_metainfo",
+                "ocr",
+                "overlay",
+                "resize",
+                "rotate"
+            ],
+            "timeout": 100
+        }
+    }
+}

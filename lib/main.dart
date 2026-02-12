@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'screens/onboarding_screen.dart';
-import 'constants/app_constants.dart';
+import 'providers/theme_provider.dart';
+import 'config/theme_config.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   // Set system UI overlay style for immersive experience
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -12,25 +15,35 @@ void main() {
       statusBarIconBrightness: Brightness.light,
     ),
   );
-  runApp(const MyApp());
+
+  // Initialize theme provider
+  final themeProvider = ThemeProvider();
+  await themeProvider.initTheme();
+
+  runApp(MyApp(themeProvider: themeProvider));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final ThemeProvider themeProvider;
+
+  const MyApp({required this.themeProvider, super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'GreenGrow ERP',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: AppConstants.primaryGreen,
-          primary: AppConstants.primaryGreen,
-        ),
-        useMaterial3: true,
+    return ChangeNotifierProvider<ThemeProvider>(
+      create: (_) => themeProvider,
+      child: Consumer<ThemeProvider>(
+        builder: (context, theme, _) {
+          return MaterialApp(
+            title: 'GreenGrow ERP',
+            debugShowCheckedModeBanner: false,
+            theme: ThemeConfig.lightTheme,
+            darkTheme: ThemeConfig.darkTheme,
+            themeMode: theme.themeMode,
+            home: const OnboardingScreen(),
+          );
+        },
       ),
-      home: const OnboardingScreen(),
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../constants/app_constants.dart';
 import '../widgets/onboarding_page.dart';
 import '../widgets/page_indicator.dart';
+import 'login_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -21,24 +22,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _onGetStarted() {
-    // TODO: Navigate to login screen
-    // For now, show a snackbar
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Navigate to Login Screen'),
-        duration: Duration(seconds: 2),
-      ),
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
     );
   }
 
   void _onLogin() {
-    // TODO: Navigate to login screen
-    // For now, show a snackbar
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Navigate to Login Screen'),
-        duration: Duration(seconds: 2),
-      ),
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
     );
   }
 
@@ -67,6 +58,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 totalPages: AppConstants.onboardingPages.length,
                 onGetStarted: _onGetStarted,
                 onLogin: _onLogin,
+                hasRotatingText: pageData.hasRotatingText,
+                rotatingWords: pageData.rotatingWords,
               );
             },
           ),
@@ -75,7 +68,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           Positioned(
             left: 0,
             right: 0,
-            bottom: 200,
+            bottom: 170,
             child: PageIndicator(
               currentPage: _currentPage,
               pageCount: AppConstants.onboardingPages.length,

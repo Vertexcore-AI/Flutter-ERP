@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_constants.dart';
+import 'animated_rotating_text.dart';
 
 class OnboardingPage extends StatelessWidget {
   final String title;
@@ -12,6 +13,8 @@ class OnboardingPage extends StatelessWidget {
   final int totalPages;
   final VoidCallback onGetStarted;
   final VoidCallback onLogin;
+  final bool hasRotatingText;
+  final List<String> rotatingWords;
 
   const OnboardingPage({
     super.key,
@@ -23,6 +26,8 @@ class OnboardingPage extends StatelessWidget {
     required this.totalPages,
     required this.onGetStarted,
     required this.onLogin,
+    this.hasRotatingText = false,
+    this.rotatingWords = const [],
   });
 
   @override
@@ -31,7 +36,7 @@ class OnboardingPage extends StatelessWidget {
       children: [
         // Background Image
         Positioned.fill(
-          child: Image.network(
+          child: Image.asset(
             imageUrl,
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) {
@@ -39,15 +44,6 @@ class OnboardingPage extends StatelessWidget {
                 color: Colors.grey[800],
                 child: const Center(
                   child: Icon(Icons.image_not_supported, size: 50, color: Colors.white54),
-                ),
-              );
-            },
-            loadingBuilder: (context, child, loadingProgress) {
-              if (loadingProgress == null) return child;
-              return Container(
-                color: Colors.grey[800],
-                child: const Center(
-                  child: CircularProgressIndicator(color: Colors.white54),
                 ),
               );
             },
@@ -111,25 +107,17 @@ class OnboardingPage extends StatelessWidget {
               width: 1,
             ),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
+          child: Image.asset(
+            AppConstants.logoPath,
+            width: 48,
+            height: 48,
+            errorBuilder: (context, error, stackTrace) {
+              return const Icon(
                 Icons.eco,
                 color: Colors.white,
-                size: 16,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'GREENGROW ERP',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  letterSpacing: 1.5,
-                ),
-              ),
-            ],
+                size: 32,
+              );
+            },
           ),
         ),
       ),
@@ -140,42 +128,74 @@ class OnboardingPage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Title
-        Text(
-          title,
-          style: GoogleFonts.inter(
-            fontSize: 36,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-            height: 1.1,
+        // Title with highlight on same line or animated rotating text
+        if (hasRotatingText && rotatingWords.isNotEmpty)
+          AnimatedRotatingText(
+            staticText: title,
+            rotatingWords: rotatingWords,
+            suffixText: titleHighlight,
+            duration: const Duration(seconds: 3),
+            textStyle: GoogleFonts.spaceGrotesk(
+              fontSize: 36,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              height: 1.1,
+            ),
+            rotatingTextStyle: GoogleFonts.spaceGrotesk(
+              fontSize: 36,
+              fontWeight: FontWeight.bold,
+              color: AppConstants.brandGreen,
+              height: 1.1,
+            ),
+            suffixTextStyle: GoogleFonts.spaceGrotesk(
+              fontSize: 36,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              height: 1.1,
+            ),
+          )
+        else
+          RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: '$title ',
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    height: 1.1,
+                  ),
+                ),
+                TextSpan(
+                  text: titleHighlight,
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                    color: AppConstants.brandGreen,
+                    height: 1.1,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        Text(
-          titleHighlight,
-          style: GoogleFonts.inter(
-            fontSize: 36,
-            fontWeight: FontWeight.bold,
-            color: AppConstants.brandGreen,
-            height: 1.1,
-          ),
-        ),
         const SizedBox(height: 12),
 
         // Description
         Text(
           description,
-          style: GoogleFonts.inter(
+          style: GoogleFonts.spaceGrotesk(
             fontSize: 16,
             color: Colors.grey[300],
             height: 1.5,
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 32),
 
         // Page Indicator (placeholder - will be added in onboarding_screen)
         const SizedBox(height: 8),
 
-        const SizedBox(height: 24),
+        const SizedBox(height: 16),
 
         // Get Started Button
         SizedBox(
@@ -196,7 +216,7 @@ class OnboardingPage extends StatelessWidget {
               children: [
                 Text(
                   'Get Started',
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.spaceGrotesk(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -221,7 +241,7 @@ class OnboardingPage extends StatelessWidget {
             children: [
               Text(
                 'Already have an account?',
-                style: GoogleFonts.inter(
+                style: GoogleFonts.spaceGrotesk(
                   fontSize: 14,
                   color: Colors.grey[400],
                 ),
@@ -231,7 +251,7 @@ class OnboardingPage extends StatelessWidget {
                 onTap: onLogin,
                 child: Text(
                   'Log In',
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.spaceGrotesk(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
