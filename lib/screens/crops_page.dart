@@ -239,7 +239,7 @@ class _CropsPageState extends State<CropsPage> with AutomaticKeepAliveClientMixi
                               maxCrossAxisExtent: maxCardWidth,
                               crossAxisSpacing: 16,
                               mainAxisSpacing: 16,
-                              childAspectRatio: 0.58, // Taller cards to accommodate images
+                              childAspectRatio: 0.75, // Shorter cards
                             ),
                             itemCount: cropProvider.crops.length,
                             itemBuilder: (context, index) {

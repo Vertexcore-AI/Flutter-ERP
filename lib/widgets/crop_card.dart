@@ -27,9 +27,11 @@ class CropCard extends StatelessWidget {
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             // Crop Image from Perenual API
             if (crop.cropImageUrl != null) ...[
               AspectRatio(
@@ -139,19 +141,19 @@ class CropCard extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // Planting Date
+            // Crop Cycle Start Date
             _buildInfoRow(
               icon: Icons.calendar_today_outlined,
-              label: 'Planted: ${crop.formattedStartDate}',
+              label: 'Cycle Start: ${crop.formattedStartDate}',
               isDark: isDark,
             ),
 
-            // Expected Harvest Date (if available)
+            // Crop Cycle End Date (if available)
             if (crop.expectedHarvestDate != null) ...[
               const SizedBox(height: 12),
               _buildInfoRow(
                 icon: Icons.event_outlined,
-                label: 'Harvest: ${crop.formattedExpectedHarvestDate}',
+                label: 'Cycle End: ${crop.formattedExpectedHarvestDate}',
                 isDark: isDark,
                 iconColor: AppConstants.forestGreen,
               ),
@@ -182,16 +184,6 @@ class CropCard extends StatelessWidget {
               isDark: isDark,
             ),
 
-            // Area and Category (if available)
-            if (crop.area != null && crop.category != null) ...[
-              const SizedBox(height: 12),
-              _buildInfoRow(
-                icon: Icons.square_foot_outlined,
-                label: crop.displayArea,
-                isDark: isDark,
-              ),
-            ],
-
             // Water Usage (if available)
             if (crop.totalWaterUsed != null && crop.totalWaterUsed! > 0) ...[
               const SizedBox(height: 12),
@@ -203,6 +195,7 @@ class CropCard extends StatelessWidget {
               ),
             ],
           ],
+        ),
         ),
       ),
     );
