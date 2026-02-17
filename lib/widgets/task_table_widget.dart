@@ -21,15 +21,19 @@ class TaskTableWidget extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Task Management',
-                style: GoogleFonts.spaceGrotesk(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.white : Colors.black87,
+              Flexible(
+                child: Text(
+                  'Task Management',
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
                 ),
               ),
+              const SizedBox(width: 8),
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   // Subtle Glass Button - New Task
                   Container(
@@ -48,8 +52,8 @@ class TaskTableWidget extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 9,
+                            horizontal: 12,
+                            vertical: 8,
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -59,7 +63,7 @@ class TaskTableWidget extends StatelessWidget {
                                 size: 16,
                                 color: AppConstants.limeGreen,
                               ),
-                              const SizedBox(width: 6),
+                              const SizedBox(width: 4),
                               Text(
                                 'New Task',
                                 style: GoogleFonts.spaceGrotesk(
@@ -74,7 +78,7 @@ class TaskTableWidget extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 8),
                   // Glass Icon Button - Filter
                   Container(
                     width: 34,

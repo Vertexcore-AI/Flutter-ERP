@@ -3,6 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'screens/onboarding_screen.dart';
 import 'providers/theme_provider.dart';
+import 'providers/user_provider.dart';
+import 'providers/farm_provider.dart';
+import 'providers/crop_provider.dart';
+import 'providers/crop_category_provider.dart';
 import 'config/theme_config.dart';
 
 void main() async {
@@ -30,8 +34,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<ThemeProvider>(
-      create: (_) => themeProvider,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<ThemeProvider>(create: (_) => themeProvider),
+        ChangeNotifierProvider<UserProvider>(create: (_) => UserProvider()),
+        ChangeNotifierProvider<FarmProvider>(create: (_) => FarmProvider()),
+        ChangeNotifierProvider<CropProvider>(create: (_) => CropProvider()),
+        ChangeNotifierProvider<CropCategoryProvider>(create: (_) => CropCategoryProvider()),
+      ],
       child: Consumer<ThemeProvider>(
         builder: (context, theme, _) {
           return MaterialApp(

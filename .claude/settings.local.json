@@ -129,7 +129,21 @@
       "Bash(dart analyze:*)",
       "Bash(flutter analyze:*)",
       "mcp__mcp-freepik__search_icons",
-      "mcp__mcp-freepik__download_icon_by_id"
+      "mcp__mcp-freepik__download_icon_by_id",
+      "Bash(flutter clean:*)",
+      "Bash(python3:*)",
+      "WebFetch(domain:en.wikipedia.org)",
+      "mcp__dart__get_runtime_errors",
+      "Bash(flutter pub run:*)",
+      "WebFetch(domain:blog.gskinner.com)",
+      "WebFetch(domain:www.kindacode.com)",
+      "WebFetch(domain:pub.dev)",
+      "WebFetch(domain:medium.com)",
+      "WebFetch(domain:www.dhiwise.com)",
+      "WebFetch(domain:api.flutter.dev)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:fonts.google.com)",
+      "WebFetch(domain:perenual.com)"
     ]
   },
   "enableAllProjectMcpServers": true,

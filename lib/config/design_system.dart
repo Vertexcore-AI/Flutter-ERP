@@ -14,32 +14,49 @@ class DesignSystem {
   /// Primary font family for the entire app
   ///
   /// Available options (all free on Google Fonts):
-  /// - GoogleFonts.spaceGrotesk (Current) - Unique character, tech-forward
+  /// - GoogleFonts.robotoCondensed (Current) - Condensed, space-efficient, highly legible
+  /// - GoogleFonts.spaceGrotesk - Unique character, tech-forward
   /// - GoogleFonts.manrope - Contemporary, highly legible
   /// - GoogleFonts.plusJakartaSans - Modern geometric with rounded corners
   /// - GoogleFonts.outfit - Rounded geometric, friendly
   /// - GoogleFonts.dmSans - Safe choice, excellent for dashboards
-  /// - GoogleFonts.inter - Clean, modern (previous font)
-  static TextStyle Function({
+  /// - GoogleFonts.inter - Clean, modern
+  static TextStyle primaryFont({
     Color? color,
     double? fontSize,
     FontWeight? fontWeight,
     double? letterSpacing,
     double? height,
-  }) get primaryFont => GoogleFonts.spaceGrotesk;
+  }) {
+    return GoogleFonts.robotoCondensed(
+      color: color,
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      letterSpacing: letterSpacing,
+      height: height,
+    );
+  }
 
   /// Optional: Different font for headings (set to same as primaryFont for consistency)
-  static TextStyle Function({
+  static TextStyle headingFont({
     Color? color,
     double? fontSize,
     FontWeight? fontWeight,
     double? letterSpacing,
     double? height,
-  }) get headingFont => GoogleFonts.spaceGrotesk;
+  }) {
+    return GoogleFonts.robotoCondensed(
+      color: color,
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      letterSpacing: letterSpacing,
+      height: height,
+    );
+  }
 
   /// Generate TextTheme for light mode
   static TextTheme lightTextTheme() {
-    return GoogleFonts.spaceGroteskTextTheme().apply(
+    return GoogleFonts.robotoCondensedTextTheme().apply(
       bodyColor: AppConstants.darkGreen,
       displayColor: AppConstants.darkGreen,
     );
@@ -47,7 +64,7 @@ class DesignSystem {
 
   /// Generate TextTheme for dark mode
   static TextTheme darkTextTheme() {
-    return GoogleFonts.spaceGroteskTextTheme(ThemeData.dark().textTheme).apply(
+    return GoogleFonts.robotoCondensedTextTheme(ThemeData.dark().textTheme).apply(
       bodyColor: AppConstants.lightSage,
       displayColor: AppConstants.lightSage,
     );

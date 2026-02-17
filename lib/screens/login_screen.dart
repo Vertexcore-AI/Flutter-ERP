@@ -1,11 +1,14 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/app_constants.dart';
+import '../providers/user_provider.dart';
 import '../services/auth_service.dart';
 import 'signup_screen.dart';
 import 'dashboard_screen.dart';
+import 'profile_setup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -52,14 +55,36 @@ class _LoginScreenState extends State<LoginScreen> {
       if (result['success']) {
         // Store token in shared preferences
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('auth_token', result['data']['access_token']);
+        final token = result['data']['access_token'];
+        await prefs.setString('auth_token', token);
         await prefs.setString('username', _usernameController.text.trim());
 
-        // Navigate to dashboard
+        // Fetch user profile to check if profile is completed
         if (!mounted) return;
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const DashboardScreen()),
-        );
+        final userProvider = Provider.of<UserProvider>(context, listen: false);
+        final profileFetched = await userProvider.fetchProfile(token);
+
+        if (!mounted) return;
+
+        if (profileFetched && userProvider.user != null) {
+          // Check if profile is completed
+          if (userProvider.user!.profileCompleted) {
+            // Profile complete - navigate to dashboard
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const DashboardScreen()),
+            );
+          } else {
+            // Profile incomplete - navigate to profile setup
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const ProfileSetupScreen()),
+            );
+          }
+        } else {
+          // Failed to fetch profile, but login successful - navigate to dashboard
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const DashboardScreen()),
+          );
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -154,58 +179,71 @@ class _LoginScreenState extends State<LoginScreen> {
 
           // Content
           SafeArea(
-            child: Column(
-              children: [
-                // Header Brand
-                Padding(
-                  padding: const EdgeInsets.all(32),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
+                    child: IntrinsicHeight(
+                      child: Column(
                         children: [
-                          Text(
-                            'Greenland',
-                            style: GoogleFonts.spaceGrotesk(
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              letterSpacing: -0.5,
+                          // Header Brand
+                          Padding(
+                            padding: const EdgeInsets.all(32),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      'Greenland',
+                                      style: GoogleFonts.spaceGrotesk(
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                        letterSpacing: -0.5,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Image.asset(
+                                      AppConstants.logoPath,
+                                      width: 32,
+                                      height: 32,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        return const Icon(
+                                          Icons.eco,
+                                          color: AppConstants.limeGreen,
+                                          size: 28,
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Smart Farming Solutions',
+                                  style: GoogleFonts.spaceGrotesk(
+                                    fontSize: 12,
+                                    color: Colors.white.withValues(alpha: 0.8),
+                                    fontWeight: FontWeight.w300,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          Image.asset(
-                            AppConstants.logoPath,
-                            width: 32,
-                            height: 32,
-                            errorBuilder: (context, error, stackTrace) {
-                              return const Icon(
-                                Icons.eco,
-                                color: AppConstants.primaryGreen,
-                                size: 28,
-                              );
-                            },
-                          ),
+
+                          const Spacer(),
+
+                          // Login Form Card
+                          _buildLoginCard(),
                         ],
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Smart Farming Solutions',
-                        style: GoogleFonts.spaceGrotesk(
-                          fontSize: 12,
-                          color: Colors.white.withValues(alpha: 0.8),
-                          fontWeight: FontWeight.w300,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-
-                const Spacer(),
-
-                // Login Form Card
-                _buildLoginCard(),
-              ],
+                );
+              },
             ),
           ),
 
@@ -216,7 +254,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 color: Colors.black.withValues(alpha: 0.5),
                 child: const Center(
                   child: CircularProgressIndicator(
-                    color: AppConstants.brandGreen,
+                    color: AppConstants.forestGreen,
                   ),
                 ),
               ),

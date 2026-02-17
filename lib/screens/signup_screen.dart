@@ -1,9 +1,11 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/app_constants.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
+import 'profile_setup_screen.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -74,14 +76,26 @@ class _SignupScreenState extends State<SignupScreen> {
       if (!mounted) return;
 
       if (result['success']) {
+        // Store the token from registration response
+        final prefs = await SharedPreferences.getInstance();
+        final token = result['data']?['access_token'] as String?;
+        if (token != null) {
+          await prefs.setString('auth_token', token);
+        }
+        await prefs.setString('username', _usernameController.text.trim());
+
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Account created successfully! Please login.'),
+            content: Text('Account created successfully! Please complete your profile.'),
             backgroundColor: Colors.green,
           ),
         );
+
+        // Navigate to ProfileSetupScreen for auto-login experience
+        if (!mounted) return;
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          MaterialPageRoute(builder: (context) => const ProfileSetupScreen()),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -165,58 +179,71 @@ class _SignupScreenState extends State<SignupScreen> {
 
           // Content
           SafeArea(
-            child: Column(
-              children: [
-                // Header Brand
-                Padding(
-                  padding: const EdgeInsets.all(32),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
+                    child: IntrinsicHeight(
+                      child: Column(
                         children: [
-                          Text(
-                            'Greenland',
-                            style: GoogleFonts.spaceGrotesk(
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              letterSpacing: -0.5,
+                          // Header Brand
+                          Padding(
+                            padding: const EdgeInsets.all(32),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      'Greenland',
+                                      style: GoogleFonts.spaceGrotesk(
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                        letterSpacing: -0.5,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Image.asset(
+                                      AppConstants.logoPath,
+                                      width: 32,
+                                      height: 32,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        return const Icon(
+                                          Icons.eco,
+                                          color: AppConstants.limeGreen,
+                                          size: 28,
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Smart Farming Solutions',
+                                  style: GoogleFonts.spaceGrotesk(
+                                    fontSize: 12,
+                                    color: Colors.white.withValues(alpha: 0.8),
+                                    fontWeight: FontWeight.w300,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          Image.asset(
-                            AppConstants.logoPath,
-                            width: 32,
-                            height: 32,
-                            errorBuilder: (context, error, stackTrace) {
-                              return const Icon(
-                                Icons.eco,
-                                color: AppConstants.primaryGreen,
-                                size: 28,
-                              );
-                            },
-                          ),
+
+                          const Spacer(),
+
+                          // Signup Form Card
+                          _buildSignupCard(),
                         ],
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Smart Farming Solutions',
-                        style: GoogleFonts.spaceGrotesk(
-                          fontSize: 12,
-                          color: Colors.white.withValues(alpha: 0.8),
-                          fontWeight: FontWeight.w300,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-
-                const Spacer(),
-
-                // Signup Form Card
-                _buildSignupCard(),
-              ],
+                );
+              },
             ),
           ),
 
@@ -227,7 +254,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 color: Colors.black.withValues(alpha: 0.5),
                 child: const Center(
                   child: CircularProgressIndicator(
-                    color: AppConstants.brandGreen,
+                    color: AppConstants.forestGreen,
                   ),
                 ),
               ),

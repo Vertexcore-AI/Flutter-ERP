@@ -45,5 +45,10 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Photo Library Permissions for Image Picker -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs access to your photo library to select farm images</string>
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs camera access to take farm photos</string>
 </dict>
 </plist>
