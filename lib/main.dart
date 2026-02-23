@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/email_verification_screen.dart';
+import 'screens/login_screen.dart';
 import 'providers/theme_provider.dart';
 import 'providers/user_provider.dart';
 import 'providers/farm_provider.dart';
@@ -123,6 +124,9 @@ class _MyAppState extends State<MyApp> {
             darkTheme: ThemeConfig.darkTheme,
             themeMode: theme.themeMode,
             home: const OnboardingScreen(),
+            routes: {
+              '/login': (context) => const LoginScreen(),
+            },
           );
         },
       ),
