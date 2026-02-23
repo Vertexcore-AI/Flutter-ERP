@@ -157,7 +157,8 @@
       "Bash(for file in *.php)",
       "Bash(do if grep -q \"<<<<<<< HEAD\" \"$file\")",
       "Bash(then echo \"Fixing: $file\")",
-      "Bash(flutter logs:*)"
+      "Bash(flutter logs:*)",
+      "Bash(flutter build:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
