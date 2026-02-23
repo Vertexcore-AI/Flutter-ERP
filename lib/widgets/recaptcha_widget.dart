@@ -2,8 +2,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-// Conditional import for web
-import 'recaptcha_widget_web.dart' if (dart.library.io) 'recaptcha_widget_mobile.dart';
+// Import web implementation only
+import 'recaptcha_widget_web.dart' if (dart.library.html) 'recaptcha_widget_web.dart';
 
 /// Platform-aware reCAPTCHA widget
 /// Uses web-specific implementation for Flutter web, WebView for mobile
