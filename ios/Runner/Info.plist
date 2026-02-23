@@ -50,5 +50,26 @@
 	<string>This app needs access to your photo library to select farm images</string>
 	<key>NSCameraUsageDescription</key>
 	<string>This app needs camera access to take farm photos</string>
+
+	<!-- Universal Links Associated Domains -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:vertexcoreai.com</string>
+	</array>
+
+	<!-- Custom URL scheme for fallback -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.example.myApp</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>govipotha</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

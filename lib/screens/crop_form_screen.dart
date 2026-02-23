@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../config/design_system.dart';
 import '../constants/app_constants.dart';
 import '../models/crop_model.dart';
@@ -91,7 +90,6 @@ class _CropFormScreenState extends State<CropFormScreen> {
       setState(() {});
     } catch (e) {
       // Crop not found
-      debugPrint('Crop not found: $e');
     }
   }
 
@@ -106,7 +104,9 @@ class _CropFormScreenState extends State<CropFormScreen> {
   }
 
   Future<void> _handleSubmit() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
 
     // Additional validation
     if (_selectedFarmId == null) {
@@ -144,7 +144,6 @@ class _CropFormScreenState extends State<CropFormScreen> {
     final cropProvider = Provider.of<CropProvider>(context, listen: false);
     final farmProvider = Provider.of<FarmProvider>(context, listen: false);
 
-    // Get farm name from selected farm ID
     final selectedFarm = farmProvider.farms.firstWhere((f) => f.id == _selectedFarmId);
     final farmName = selectedFarm.name;
 
@@ -595,7 +594,7 @@ class _CropFormScreenState extends State<CropFormScreen> {
                       Expanded(
                         flex: 2,
                         child: ElevatedButton(
-                          onPressed: _handleSubmit,
+                          onPressed: _isLoading ? null : _handleSubmit,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppConstants.limeGreen,
                             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -604,14 +603,23 @@ class _CropFormScreenState extends State<CropFormScreen> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: Text(
-                            widget.cropId == null ? 'Create Crop' : 'Update Crop',
-                            style: DesignSystem.text(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
+                          child: _isLoading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
+                                )
+                              : Text(
+                                  widget.cropId == null ? 'Create Crop' : 'Update Crop',
+                                  style: DesignSystem.text(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
                         ),
                       ),
                     ],
@@ -724,7 +732,7 @@ class _CropFormScreenState extends State<CropFormScreen> {
     required bool isDark,
   }) {
     return DropdownButtonFormField<T>(
-      value: items.any((item) => item.value == value) ? value : null,
+      initialValue: items.any((item) => item.value == value) ? value : null,
       items: items,
       onChanged: onChanged,
       decoration: InputDecoration(

@@ -80,8 +80,8 @@ class _SwipeableNavBarState extends State<SwipeableNavBar> {
     final isLandscape = orientation == Orientation.landscape;
 
     final effectiveMaxWidth = isMobile ? double.infinity : 400.0;
-    final navBarHeight = isLandscape ? 80.0 : 90.0;  // Increased height
-    final baseIconSize = isLandscape ? 26.0 : 28.0;  // Increased icon size
+    final navBarHeight = isLandscape ? 70.0 : 80.0;  // Nav bar height
+    final baseIconSize = isLandscape ? 22.0 : 24.0;  // Smaller icon size
 
     return Padding(
       padding: EdgeInsets.only(
@@ -120,7 +120,7 @@ class _SwipeableNavBarState extends State<SwipeableNavBar> {
                 },
               ),
 
-              // Fixed center circle
+              // Fixed center circle with inner glow
               Positioned(
                 left: 0,
                 right: 0,
@@ -133,16 +133,18 @@ class _SwipeableNavBarState extends State<SwipeableNavBar> {
                       height: 58,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: AppConstants.limeGreen.withValues(alpha: 0.3),
+                        color: AppConstants.limeGreen.withValues(alpha: 0.15),
                         border: Border.all(
-                          color: AppConstants.limeGreen,
+                          color: AppConstants.limeGreen.withValues(alpha: 0.5),
                           width: 2,
                         ),
                         boxShadow: [
+                          // Inner glow effect (inset shadow simulation)
                           BoxShadow(
-                            color: AppConstants.limeGreen.withValues(alpha: 0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
+                            color: AppConstants.limeGreen.withValues(alpha: 0.2),
+                            blurRadius: 12,
+                            spreadRadius: -4,
+                            offset: const Offset(0, 0),
                           ),
                         ],
                       ),
@@ -166,6 +168,7 @@ class _SwipeableNavBarState extends State<SwipeableNavBar> {
 
     // Calculate distance from center for scaling
     final distance = (_currentPage - index).abs();
+    final isSelected = distance < 0.5; // Icon is at center position
     final scale = 1.0 + (1.0 - distance.clamp(0.0, 1.0)) * 0.5; // 1.0x to 1.5x
     final opacity = 0.6 + (1.0 - distance.clamp(0.0, 1.0)) * 0.4; // 60% to 100%
 
@@ -174,29 +177,47 @@ class _SwipeableNavBarState extends State<SwipeableNavBar> {
       child: Transform.scale(
         scale: scale,
         child: Opacity(
-          opacity: opacity,
-          child: Center(
-            child: ColorFiltered(
-              colorFilter: ColorFilter.mode(
-                isDark ? Colors.white : AppConstants.darkGreen,
-                BlendMode.srcIn,
-              ),
-              child: Image.asset(
-                item.iconPath,
-                width: baseIconSize,
-                height: baseIconSize,
-                filterQuality: FilterQuality.high,
-                errorBuilder: (context, error, stackTrace) {
-                  return Icon(
-                    Icons.circle,
-                    size: baseIconSize,
-                    color: isDark ? Colors.white : AppConstants.darkGreen,
-                  );
-                },
-              ),
+            opacity: opacity,
+            child: Center(
+              child: isSelected
+                  // Selected icon: Show full colors without filtering
+                  ? Image.asset(
+                      item.iconPath,
+                      width: baseIconSize,
+                      height: baseIconSize,
+                      filterQuality: FilterQuality.high,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Icon(
+                          Icons.circle,
+                          size: baseIconSize,
+                          color: AppConstants.limeGreen,
+                        );
+                      },
+                    )
+                  // Unselected icons: Apply color filter (monochrome)
+                  : ColorFiltered(
+                      colorFilter: ColorFilter.mode(
+                        isDark
+                            ? Colors.white.withValues(alpha: 0.5)
+                            : AppConstants.darkGreen.withValues(alpha: 0.4),
+                        BlendMode.srcIn,
+                      ),
+                      child: Image.asset(
+                        item.iconPath,
+                        width: baseIconSize,
+                        height: baseIconSize,
+                        filterQuality: FilterQuality.high,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(
+                            Icons.circle,
+                            size: baseIconSize,
+                            color: isDark ? Colors.white : AppConstants.darkGreen,
+                          );
+                        },
+                      ),
+                    ),
             ),
           ),
-        ),
       ),
     );
   }

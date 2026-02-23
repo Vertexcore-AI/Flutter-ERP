@@ -4,38 +4,57 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import '../config/api_config.dart';
 import '../models/farm_model.dart';
+import 'api_client.dart';
 
 class FarmService {
+  final _apiClient = ApiClient();
+
   // Fetch all farms
   Future<Map<String, dynamic>> fetchFarms(String token) async {
     try {
-      final response = await http.get(
-        Uri.parse(ApiConfig.farms),
-        headers: ApiConfig.getAuthHeaders(token),
-      );
-
+      final response = await _apiClient.get(ApiConfig.farms);
       final data = jsonDecode(response.body);
 
-      if (response.statusCode == 200) {
-        // Backend returns array directly (not wrapped in 'data' key)
-        final List<Farm> farms = (data as List)
-            .map((item) => Farm.fromJson(item))
-            .toList();
+      // Backend returns array directly (not wrapped in 'data' key)
+      final List<Farm> farms = (data as List)
+          .map((item) => Farm.fromJson(item))
+          .toList();
 
-        return {
-          'success': true,
-          'data': farms,
-        };
-      } else {
-        return {
-          'success': false,
-          'error': data['message'] ?? 'Failed to fetch farms',
-        };
-      }
+      return {
+        'success': true,
+        'data': farms,
+      };
+    } on UnauthorizedException catch (e) {
+      return {
+        'success': false,
+        'error': e.message,
+        'unauthorized': true,
+      };
+    } on NotFoundException catch (e) {
+      return {
+        'success': false,
+        'error': e.message,
+      };
+    } on RateLimitException catch (e) {
+      return {
+        'success': false,
+        'error': e.message,
+        'retryAfter': e.retryAfter,
+      };
+    } on NetworkException catch (e) {
+      return {
+        'success': false,
+        'error': e.message,
+      };
+    } on ApiException catch (e) {
+      return {
+        'success': false,
+        'error': e.message,
+      };
     } catch (e) {
       return {
         'success': false,
-        'error': 'Network error: ${e.toString()}',
+        'error': 'Unexpected error: ${e.toString()}',
       };
     }
   }
@@ -208,28 +227,44 @@ class FarmService {
     required int farmId,
   }) async {
     try {
-      final response = await http.delete(
-        Uri.parse('${ApiConfig.farms}/$farmId'),
-        headers: ApiConfig.getAuthHeaders(token),
-      );
-
+      final response = await _apiClient.delete('${ApiConfig.farms}/$farmId');
       final data = jsonDecode(response.body);
 
-      if (response.statusCode == 200) {
-        return {
-          'success': true,
-          'message': data['message'] ?? 'Farm deleted successfully',
-        };
-      } else {
-        return {
-          'success': false,
-          'error': data['message'] ?? 'Failed to delete farm',
-        };
-      }
+      return {
+        'success': true,
+        'message': data['message'] ?? 'Farm deleted successfully',
+      };
+    } on UnauthorizedException catch (e) {
+      return {
+        'success': false,
+        'error': e.message,
+        'unauthorized': true,
+      };
+    } on NotFoundException catch (e) {
+      return {
+        'success': false,
+        'error': e.message,
+      };
+    } on RateLimitException catch (e) {
+      return {
+        'success': false,
+        'error': e.message,
+        'retryAfter': e.retryAfter,
+      };
+    } on NetworkException catch (e) {
+      return {
+        'success': false,
+        'error': e.message,
+      };
+    } on ApiException catch (e) {
+      return {
+        'success': false,
+        'error': e.message,
+      };
     } catch (e) {
       return {
         'success': false,
-        'error': 'Network error: ${e.toString()}',
+        'error': 'Unexpected error: ${e.toString()}',
       };
     }
   }

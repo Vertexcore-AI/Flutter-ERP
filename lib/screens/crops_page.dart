@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../config/design_system.dart';
 import '../constants/app_constants.dart';
 import '../providers/crop_provider.dart';
+import '../services/secure_storage_service.dart';
 import '../widgets/crop_card.dart';
+import '../widgets/app_bar_glass.dart';
 import 'crop_form_screen.dart';
 
 class CropsPage extends StatefulWidget {
@@ -18,6 +19,7 @@ class _CropsPageState extends State<CropsPage> with AutomaticKeepAliveClientMixi
   @override
   bool get wantKeepAlive => true;
 
+  final _secureStorage = SecureStorageService();
   String? _authToken;
 
   @override
@@ -27,16 +29,29 @@ class _CropsPageState extends State<CropsPage> with AutomaticKeepAliveClientMixi
   }
 
   Future<void> _loadToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    _authToken = prefs.getString('auth_token');
-    print('CropsPage._loadToken - token: ${_authToken != null ? "found" : "null"}'); // DEBUG
-    if (_authToken != null && mounted) {
-      final cropProvider = Provider.of<CropProvider>(context, listen: false);
-      print('CropsPage._loadToken - calling fetchCrops'); // DEBUG
-      await cropProvider.fetchCrops(_authToken!);
-      print('CropsPage._loadToken - fetchCrops completed'); // DEBUG
-    } else {
-      print('CropsPage._loadToken - token is null or widget not mounted'); // DEBUG
+    try {
+      _authToken = await _secureStorage.getAuthToken();
+
+      if (_authToken != null && mounted) {
+        final cropProvider = Provider.of<CropProvider>(context, listen: false);
+        await cropProvider.fetchCrops(_authToken!);
+      } else {
+        if (_authToken == null && mounted) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Not authenticated. Please log in.'),
+                  backgroundColor: Colors.orange,
+                  duration: Duration(seconds: 3),
+                ),
+              );
+            }
+          });
+        }
+      }
+    } catch (e) {
+      // Silent error handling
     }
   }
 
@@ -48,7 +63,15 @@ class _CropsPageState extends State<CropsPage> with AutomaticKeepAliveClientMixi
   }
 
   void _navigateToForm({int? cropId}) {
-    if (_authToken == null) return;
+    if (_authToken == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Authentication error. Please log in again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
 
     Navigator.push(
       context,
@@ -58,7 +81,11 @@ class _CropsPageState extends State<CropsPage> with AutomaticKeepAliveClientMixi
           cropId: cropId,
         ),
       ),
-    );
+    ).then((_) {
+      if (_authToken != null) {
+        _handleRefresh();
+      }
+    });
   }
 
   Future<void> _confirmDelete(BuildContext context, int cropId, String cropType) async {
@@ -115,114 +142,97 @@ class _CropsPageState extends State<CropsPage> with AutomaticKeepAliveClientMixi
           ? DesignSystem.darkScaffoldBackground
           : DesignSystem.lightScaffoldBackground,
       body: SafeArea(
-        child: Column(
-          children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: Row(
+        child: Consumer<CropProvider>(
+          builder: (context, cropProvider, child) {
+            if (cropProvider.isLoading && cropProvider.crops.isEmpty) {
+              return Column(
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.grass_outlined,
-                              color: AppConstants.limeGreen,
-                              size: 28,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                'Crop Management',
-                                style: DesignSystem.heading(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: isDark ? Colors.white : Colors.black87,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 40),
-                          child: Text(
-                            'Track and manage your crop lifecycles',
-                            style: DesignSystem.text(
-                              fontSize: 13,
-                              color: isDark ? Colors.white60 : Colors.grey[600],
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+                  AppBarGlass(
+                    mode: AppBarMode.title,
+                    title: 'Crop Management',
+                    subtitle: 'Track and manage your crop lifecycles',
+                    trailingActions: [
+                      IconButton(
+                        onPressed: () => _navigateToForm(),
+                        icon: const Icon(Icons.add, size: 22),
+                        tooltip: 'Add Crop',
+                      ),
+                    ],
+                  ),
+                  const Expanded(
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: AppConstants.limeGreen,
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: () => _navigateToForm(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppConstants.limeGreen,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      minimumSize: Size.zero,
+                ],
+              );
+            }
+
+            if (cropProvider.crops.isEmpty) {
+              return SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 110),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppBarGlass(
+                      mode: AppBarMode.title,
+                      title: 'Crop Management',
+                      subtitle: 'Track and manage your crop lifecycles',
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.add, color: Colors.white, size: 18),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Add',
+                    const SizedBox(height: 24),
+                    _buildEmptyState(isDark),
+                  ],
+                ),
+              );
+            }
+
+            return RefreshIndicator(
+              onRefresh: _handleRefresh,
+              color: AppConstants.limeGreen,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 110),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppBarGlass(
+                      mode: AppBarMode.title,
+                      title: 'Crop Management',
+                      subtitle: 'Track and manage your crop lifecycles',
+                    ),
+                    const SizedBox(height: 16),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: ElevatedButton.icon(
+                        onPressed: () => _navigateToForm(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppConstants.limeGreen,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          minimumSize: Size.zero,
+                        ),
+                        icon: const Icon(Icons.add, size: 18),
+                        label: Text(
+                          'Add Crop',
                           style: DesignSystem.text(
-                            fontSize: 13,
+                            fontSize: 14,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Crops Grid
-            Expanded(
-              child: Consumer<CropProvider>(
-                builder: (context, cropProvider, child) {
-                  if (cropProvider.isLoading && cropProvider.crops.isEmpty) {
-                    return const Center(
-                      child: CircularProgressIndicator(
-                        color: AppConstants.limeGreen,
                       ),
-                    );
-                  }
-
-                  if (cropProvider.crops.isEmpty) {
-                    return _buildEmptyState(isDark);
-                  }
-
-                  return RefreshIndicator(
-                    onRefresh: _handleRefresh,
-                    color: AppConstants.limeGreen,
-                    child: LayoutBuilder(
+                    ),
+                    const SizedBox(height: 24),
+                    LayoutBuilder(
                       builder: (context, constraints) {
                         // Calculate max width per card based on screen width
                         double maxCardWidth;
                         if (constraints.maxWidth < 600) {
-                          maxCardWidth = constraints.maxWidth - 48; // Mobile (full width minus padding)
+                          maxCardWidth = constraints.maxWidth; // Mobile (full width)
                         } else if (constraints.maxWidth < 900) {
                           maxCardWidth = 380; // Small tablet (2 columns)
                         } else if (constraints.maxWidth < 1200) {
@@ -231,38 +241,36 @@ class _CropsPageState extends State<CropsPage> with AutomaticKeepAliveClientMixi
                           maxCardWidth = 320; // Desktop (4+ columns)
                         }
 
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 24),
-                          child: GridView.builder(
-                            padding: const EdgeInsets.only(bottom: 110), // Space for nav bar
-                            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                              maxCrossAxisExtent: maxCardWidth,
-                              crossAxisSpacing: 16,
-                              mainAxisSpacing: 16,
-                              childAspectRatio: 0.58, // Taller cards to accommodate images
-                            ),
-                            itemCount: cropProvider.crops.length,
-                            itemBuilder: (context, index) {
-                              final crop = cropProvider.crops[index];
-                              return CropCard(
-                                crop: crop,
-                                onEdit: () => _navigateToForm(cropId: crop.id),
-                                onDelete: () => _confirmDelete(
-                                  context,
-                                  crop.id,
-                                  crop.cropType,
-                                ),
-                              );
-                            },
+                        return GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: maxCardWidth,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                            childAspectRatio: 0.75, // Shorter cards
                           ),
+                          itemCount: cropProvider.crops.length,
+                          itemBuilder: (context, index) {
+                            final crop = cropProvider.crops[index];
+                            return CropCard(
+                              crop: crop,
+                              onEdit: () => _navigateToForm(cropId: crop.id),
+                              onDelete: () => _confirmDelete(
+                                context,
+                                crop.id,
+                                crop.cropType,
+                              ),
+                            );
+                          },
                         );
                       },
                     ),
-                  );
-                },
+                  ],
+                ),
               ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
@@ -304,29 +312,6 @@ class _CropsPageState extends State<CropsPage> with AutomaticKeepAliveClientMixi
                 color: isDark ? Colors.white60 : Colors.grey[600],
               ),
               textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () => _navigateToForm(),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppConstants.limeGreen,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 14,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              icon: const Icon(Icons.add, color: Colors.white),
-              label: Text(
-                'Add Your First Crop',
-                style: DesignSystem.text(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
             ),
           ],
         ),

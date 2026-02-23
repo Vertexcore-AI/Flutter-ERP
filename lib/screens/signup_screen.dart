@@ -1,11 +1,11 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/app_constants.dart';
 import '../services/auth_service.dart';
+import '../config/recaptcha_config.dart';
+import '../widgets/recaptcha_widget.dart';
 import 'login_screen.dart';
-import 'profile_setup_screen.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -16,16 +16,19 @@ class SignupScreen extends StatefulWidget {
 
 class _SignupScreenState extends State<SignupScreen> {
   final _usernameController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   bool _isLoading = false;
+  String? _recaptchaToken;
   final _authService = AuthService();
 
   @override
   void dispose() {
     _usernameController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -33,11 +36,24 @@ class _SignupScreenState extends State<SignupScreen> {
 
   Future<void> _handleSignUp() async {
     if (_usernameController.text.isEmpty ||
+        _emailController.text.isEmpty ||
         _passwordController.text.isEmpty ||
         _confirmPasswordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please fill in all fields'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Validate email format
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(_emailController.text.trim())) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a valid email address'),
           backgroundColor: Colors.red,
         ),
       );
@@ -64,38 +80,104 @@ class _SignupScreenState extends State<SignupScreen> {
       return;
     }
 
+    // Check if reCAPTCHA token is present
+    if (_recaptchaToken == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please complete reCAPTCHA verification'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
       final result = await _authService.register(
         username: _usernameController.text.trim(),
+        email: _emailController.text.trim(),
         password: _passwordController.text,
         passwordConfirmation: _confirmPasswordController.text,
+        recaptchaToken: _recaptchaToken!,
       );
 
       if (!mounted) return;
 
       if (result['success']) {
-        // Store the token from registration response
-        final prefs = await SharedPreferences.getInstance();
-        final token = result['data']?['access_token'] as String?;
-        if (token != null) {
-          await prefs.setString('auth_token', token);
-        }
-        await prefs.setString('username', _usernameController.text.trim());
-
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Account created successfully! Please complete your profile.'),
-            backgroundColor: Colors.green,
+
+        // Show success dialog with email verification instructions
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: Row(
+              children: [
+                const Icon(Icons.mark_email_read, color: AppConstants.forestGreen, size: 28),
+                const SizedBox(width: 12),
+                Text(
+                  'Verify Your Email',
+                  style: GoogleFonts.spaceGrotesk(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Account created successfully!',
+                  style: GoogleFonts.spaceGrotesk(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.green,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'We\'ve sent a verification email to:',
+                  style: GoogleFonts.spaceGrotesk(fontSize: 14),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _emailController.text.trim(),
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppConstants.forestGreen,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Please check your email and click the verification link to activate your account.',
+                  style: GoogleFonts.spaceGrotesk(fontSize: 14),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (context) => const LoginScreen()),
+                  );
+                },
+                child: Text(
+                  'OK',
+                  style: GoogleFonts.spaceGrotesk(
+                    fontWeight: FontWeight.w600,
+                    color: AppConstants.forestGreen,
+                  ),
+                ),
+              ),
+            ],
           ),
-        );
-
-        // Navigate to ProfileSetupScreen for auto-login experience
-        if (!mounted) return;
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const ProfileSetupScreen()),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -319,6 +401,15 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: 16),
 
+                // Email Field
+                _buildTextField(
+                  controller: _emailController,
+                  icon: Icons.email_outlined,
+                  hintText: 'Email',
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 16),
+
                 // Password Field
                 _buildPasswordField(
                   controller: _passwordController,
@@ -342,6 +433,23 @@ class _SignupScreenState extends State<SignupScreen> {
                     });
                   },
                   hintText: 'Confirm Password',
+                ),
+                const SizedBox(height: 24),
+
+                // reCAPTCHA Widget (always shown for registration)
+                RecaptchaWidget(
+                  siteKey: RecaptchaConfig.siteKey,
+                  onVerified: (token) {
+                    setState(() => _recaptchaToken = token);
+                  },
+                  onError: (error) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('reCAPTCHA failed: $error'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 24),
 

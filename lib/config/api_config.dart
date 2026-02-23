@@ -12,6 +12,7 @@ class ApiConfig {
   static String get login => '$baseUrl$apiPrefix/auth/login';
   static String get logout => '$baseUrl$apiPrefix/auth/logout';
   static String get me => '$baseUrl$apiPrefix/auth/me';
+  static String get verifyEmail => '$baseUrl$apiPrefix/auth/verify-email';
 
   // Dashboard endpoints
   static String get farms => '$baseUrl$apiPrefix/farms';

@@ -143,7 +143,21 @@
       "WebFetch(domain:api.flutter.dev)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:fonts.google.com)",
-      "WebFetch(domain:perenual.com)"
+      "WebFetch(domain:perenual.com)",
+      "Bash(sqlite3:*)",
+      "Bash(keytool:*)",
+      "Bash(timeout 5 tail:*)",
+      "Bash(exit:*)",
+      "Bash(git reset:*)",
+      "Bash(git rebase:*)",
+      "Bash(git fetch:*)",
+      "Bash(for file in Buyer.php CropMaintenance.php Crops.php Farm.php FertilizerManagement.php Finance.php HarvestRecord.php Inventory.php Labour.php MaintenanceReport.php Note.php Payment.php PesticideManagement.php StockAdjustment.php Task.php WaterManagement.php)",
+      "Bash(do git checkout --theirs \"$file\")",
+      "Bash(done)",
+      "Bash(for file in *.php)",
+      "Bash(do if grep -q \"<<<<<<< HEAD\" \"$file\")",
+      "Bash(then echo \"Fixing: $file\")",
+      "Bash(flutter logs:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

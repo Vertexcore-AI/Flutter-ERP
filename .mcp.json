@@ -4,15 +4,16 @@
             "command": "node",
             "args": [
                 "C:\\Users\\user\\AppData\\Roaming\\npm\\node_modules\\@modelcontextprotocol\\server-filesystem\\dist\\index.js",
-                "E:\\Herd\\ERP-Flutter\\my_app"
+                "E:\\Herd\\ERP-Flutter\\my_app",
+                "E:\\Herd\\ERP-Flutter\\my_app\\Backend"
             ]
         },
-        "MCP SQLite Server": {
-            "type": "stdio",
-            "command": "node",
+           "MCP SQLite Server": {
+            "command": "npx",
             "args": [
-                "C:\\Users\\user\\AppData\\Roaming\\npm\\node_modules\\mcp-sqlite\\mcp-sqlite-server.js",
-                "data\\admin.sqlite"
+                "-y",
+                "mcp-sqlite",
+                "Backend\\Back-end\\database\\database.sqlite"
             ]
         },
         "context7": {

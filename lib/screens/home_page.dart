@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 import '../constants/app_constants.dart';
 import '../models/dashboard_models.dart';
-import '../providers/theme_provider.dart';
 import '../services/weather_service.dart';
 import '../widgets/stat_card.dart';
 import '../widgets/weather_widget.dart';
 import '../widgets/production_chart_widget.dart';
 import '../widgets/task_table_widget.dart';
 import '../widgets/field_info_card.dart';
-import 'profile_screen.dart';
+import '../widgets/app_bar_glass.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -161,89 +159,12 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Dynamic Island Style Top Bar (Pill-shaped)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? const Color(0xFF2A2A2A) // Darker elevated surface in dark mode
-                  : Colors.white, // White in light mode
-              borderRadius: BorderRadius.circular(21), // Pill shape
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
-                  blurRadius: 20,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Logo
-                Row(
-                  children: [
-                    Text(
-                      'Greenland',
-                      style: GoogleFonts.spaceGrotesk(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Icon(Icons.eco, color: AppConstants.limeGreen, size: 24),
-                  ],
-                ),
-                // Actions
-                Row(
-                  children: [
-                    // Profile Icon
-                    IconButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const ProfileScreen(),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.person_outline, size: 22),
-                      tooltip: 'Profile',
-                    ),
-                    const SizedBox(width: 4),
-                    // Theme Toggle
-                    IconButton(
-                      onPressed: () {
-                        Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
-                      },
-                      icon: Icon(
-                        Provider.of<ThemeProvider>(context).isDarkMode
-                            ? Icons.light_mode
-                            : Icons.dark_mode,
-                        size: 22,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    // User Profile
-                    CircleAvatar(
-                      radius: 18,
-                      backgroundColor: AppConstants.limeGreen,
-                      child: Text(
-                        'MB',
-                        style: GoogleFonts.spaceGrotesk(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+          // Glass App Bar
+          AppBarGlass(
+            mode: AppBarMode.branding,
+            brandingText: 'Greenland',
+            brandingIcon: Icons.eco,
           ),
-          const SizedBox(height: 32),
-          const SizedBox(height: 4),
           const SizedBox(height: 24),
           // Dashboard Layouts
           if (isMobile) ...[

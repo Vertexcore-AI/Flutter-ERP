@@ -19,18 +19,15 @@ class CropProvider extends ChangeNotifier {
     notifyListeners();
 
     final result = await _cropService.fetchCrops(token);
-    print('CropProvider.fetchCrops - result: $result'); // DEBUG
 
     _isLoading = false;
 
     if (result['success']) {
       _crops = result['data'];
-      print('CropProvider.fetchCrops - crops count: ${_crops.length}'); // DEBUG
       notifyListeners();
       return true;
     } else {
       _error = result['error'];
-      print('CropProvider.fetchCrops - error: $_error'); // DEBUG
       notifyListeners();
       return false;
     }
