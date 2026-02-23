@@ -1,0 +1,1918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Realistic Drone Simulator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { overflow: hidden; background: #0a0a0f; font-family: 'Segoe UI', system-ui, sans-serif; }
+        #canvas-container { width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; }
+        
+        #hud {
+            position: fixed; top: 20px; left: 20px; z-index: 100;
+            background: linear-gradient(135deg, rgba(10, 20, 30, 0.85), rgba(20, 40, 60, 0.75));
+            border: 1px solid rgba(0, 200, 150, 0.3); border-radius: 12px; padding: 20px;
+            color: #e0f0e8; min-width: 220px; backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+        #hud h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 2px; color: #00c896; margin-bottom: 15px; border-bottom: 1px solid rgba(0, 200, 150, 0.3); padding-bottom: 10px; }
+        .stat { display: flex; justify-content: space-between; margin: 8px 0; font-size: 13px; }
+        .stat-label { color: #bdd; }
+        .stat-value { color: #0f8; font-weight: 600; font-family: 'Consolas', monospace; }
+        .stat-value.off { color: #f44; }
+        .stat-value.on { color: #0f8; }
+        
+        #controls-panel {
+            position: fixed; bottom: 20px; left: 20px; z-index: 100;
+            background: linear-gradient(135deg, rgba(10, 20, 30, 0.85), rgba(20, 40, 60, 0.75));
+            border: 1px solid rgba(0, 200, 150, 0.3); border-radius: 12px; padding: 20px;
+            color: #e0f0e8; backdrop-filter: blur(10px);
+        }
+        #controls-panel h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #00c896; margin-bottom: 12px; }
+        .control-row { display: flex; gap: 8px; margin: 6px 0; font-size: 12px; align-items: center; }
+        .key {
+            background: linear-gradient(180deg, #2a3a4a, #1a2a3a); border: 1px solid #3a5a6a;
+            border-radius: 4px; padding: 4px 10px; font-family: 'Consolas', monospace;
+            font-size: 11px; color: #0cf; min-width: 30px; text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .control-desc { color: #bdd; }
+        
+        #motor-status {
+            position: fixed; top: 20px; right: 20px; z-index: 100;
+            background: linear-gradient(135deg, rgba(10, 20, 30, 0.85), rgba(20, 40, 60, 0.75));
+            border: 1px solid rgba(0, 200, 150, 0.3); border-radius: 12px; padding: 20px 30px;
+            text-align: center; backdrop-filter: blur(10px);
+        }
+        #motor-status .label { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #bdd; margin-bottom: 8px; }
+        #motor-status .status { font-size: 24px; font-weight: bold; transition: all 0.3s; }
+        #motor-status .status.on { color: #0f8; text-shadow: 0 0 20px rgba(0, 255, 136, 0.5); }
+        #motor-status .status.off { color: #f44; text-shadow: 0 0 20px rgba(255, 68, 68, 0.5); }
+        
+        #warning {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(255, 50, 50, 0.9); border: 2px solid #f88; border-radius: 12px;
+            padding: 20px 40px; color: white; font-size: 18px; font-weight: bold; z-index: 200;
+            display: none; animation: pulse 0.5s infinite alternate;
+        }
+        @keyframes pulse { from { opacity: 0.7; } to { opacity: 1; } }
+
+        /* Mobile Touch Controls */
+        body {
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        #canvas-container {
+            touch-action: none;
+        }
+
+        #mobile-controls {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* Left Joystick (Altitude Control) */
+        #left-joystick-container {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 150px;
+            height: 150px;
+            pointer-events: auto;
+        }
+
+        #left-joystick-base {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            left: 15px;
+            top: 15px;
+            border-radius: 50%;
+            background: rgba(26, 42, 58, 0.6);
+            border: 2px solid rgba(0, 200, 150, 0.3);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        #left-joystick-stick {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            left: 45px;
+            top: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00ff88, #00cc66);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.5);
+            transition: transform 0.1s ease-out;
+            pointer-events: none;
+        }
+
+        #left-joystick-label {
+            position: absolute;
+            bottom: -25px;
+            width: 100%;
+            text-align: center;
+            font-size: 11px;
+            color: #0cf;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Right Joystick (Movement Control) */
+        #right-joystick-container {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 150px;
+            height: 150px;
+            pointer-events: auto;
+        }
+
+        #right-joystick-base {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            left: 15px;
+            top: 15px;
+            border-radius: 50%;
+            background: rgba(26, 42, 58, 0.6);
+            border: 2px solid rgba(0, 200, 150, 0.3);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        #right-joystick-stick {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            left: 45px;
+            top: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00ff88, #00cc66);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.5);
+            transition: transform 0.1s ease-out;
+            pointer-events: none;
+        }
+
+        #right-joystick-label {
+            position: absolute;
+            bottom: -25px;
+            width: 100%;
+            text-align: center;
+            font-size: 11px;
+            color: #0cf;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Motor Toggle Button */
+        #motor-toggle-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, 150px);
+            width: 120px;
+            height: 50px;
+            background: linear-gradient(135deg, rgba(10, 20, 30, 0.85), rgba(20, 40, 60, 0.75));
+            border: 2px solid rgba(0, 200, 150, 0.3);
+            border-radius: 25px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        #motor-toggle-btn:active {
+            transform: translate(-50%, 150px) scale(0.95);
+        }
+
+        #motor-toggle-btn span:first-child {
+            font-size: 10px;
+            color: #bdd;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        #motor-toggle-btn #motor-btn-status {
+            font-size: 16px;
+            font-weight: bold;
+            color: #f44;
+            text-shadow: 0 0 10px currentColor;
+        }
+
+        /* Responsive Mobile Styles */
+        @media (max-width: 768px) {
+            #hud {
+                top: 10px;
+                left: 10px;
+                min-width: 160px;
+                padding: 12px;
+                font-size: 11px;
+                backdrop-filter: blur(8px);
+            }
+
+            #hud h2 {
+                font-size: 11px;
+                margin-bottom: 8px;
+            }
+
+            .stat {
+                font-size: 10px;
+                margin: 5px 0;
+            }
+
+            #motor-status {
+                top: 10px;
+                right: 10px;
+                padding: 12px 20px;
+            }
+
+            #motor-status .label {
+                font-size: 9px;
+            }
+
+            #motor-status .status {
+                font-size: 18px;
+            }
+
+            #warning {
+                font-size: 14px;
+                padding: 12px 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    
+    <div id="hud">
+        <h2>Flight Data</h2>
+        <div class="stat"><span class="stat-label">Altitude:</span><span class="stat-value" id="altitude">0.0 m</span></div>
+        <div class="stat"><span class="stat-label">Position X:</span><span class="stat-value" id="pos-x">0.0 m</span></div>
+        <div class="stat"><span class="stat-label">Position Z:</span><span class="stat-value" id="pos-z">0.0 m</span></div>
+        <div class="stat"><span class="stat-label">Speed:</span><span class="stat-value" id="speed">0.0 m/s</span></div>
+        <div class="stat"><span class="stat-label">Motors:</span><span class="stat-value off" id="prop-status">OFF</span></div>
+    </div>
+    
+    <div id="motor-status">
+        <div class="label">System Status</div>
+        <div class="status off" id="motor-display">STANDBY</div>
+    </div>
+    
+    <div id="controls-panel">
+        <h3>Controls</h3>
+        <div class="control-row"><span class="key">P</span><span class="control-desc">Toggle Motors</span></div>
+        <div class="control-row"><span class="key">W / Up</span><span class="control-desc">Increase Altitude</span></div>
+        <div class="control-row"><span class="key">S / Down</span><span class="control-desc">Decrease Altitude</span></div>
+        <div class="control-row"><span class="key">A / Left</span><span class="control-desc">Move Left</span></div>
+        <div class="control-row"><span class="key">D / Right</span><span class="control-desc">Move Right</span></div>
+    </div>
+
+    <div id="warning">MOTORS OFF - DESCENT</div>
+
+    <!-- Mobile Touch Controls -->
+    <div id="mobile-controls" style="display: none;">
+        <!-- Left Joystick (Altitude Control) -->
+        <div id="left-joystick-container">
+            <div id="left-joystick-base"></div>
+            <div id="left-joystick-stick"></div>
+            <div id="left-joystick-label">ALTITUDE</div>
+        </div>
+
+        <!-- Right Joystick (Movement Control) -->
+        <div id="right-joystick-container">
+            <div id="right-joystick-base"></div>
+            <div id="right-joystick-stick"></div>
+            <div id="right-joystick-label">MOVE</div>
+        </div>
+
+        <!-- Motor Toggle Button -->
+        <div id="motor-toggle-btn">
+            <span>MOTORS</span>
+            <span id="motor-btn-status">OFF</span>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        
+        // --- SCENE SETUP ---
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0xb0e0e6, 0.002);
+        
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(8, 6, 8);
+        
+        // Mobile device detection for performance optimization
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                   (navigator.maxTouchPoints && navigator.maxTouchPoints > 1);
+        }
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobileDevice() ? 2 : 3));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = isMobileDevice() ? THREE.BasicShadowMap : THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.2;
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+        
+        // --- LIGHTING ---
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+        scene.add(ambientLight);
+        
+        const hemiLight = new THREE.HemisphereLight(0x87ceeb, 0x3a5a30, 0.6);
+        scene.add(hemiLight);
+        
+        const sunLight = new THREE.DirectionalLight(0xffffff, 2.5);
+        sunLight.position.set(50, 100, 50);
+        sunLight.castShadow = true;
+        // Reduce shadow map size on mobile for better performance
+        sunLight.shadow.mapSize.width = isMobileDevice() ? 2048 : 4096;
+        sunLight.shadow.mapSize.height = isMobileDevice() ? 2048 : 4096;
+        sunLight.shadow.camera.near = 0.5;
+        sunLight.shadow.camera.far = 500;
+        sunLight.shadow.camera.left = -100;
+        sunLight.shadow.camera.right = 100;
+        sunLight.shadow.camera.top = 100;
+        sunLight.shadow.camera.bottom = -100;
+        sunLight.shadow.bias = -0.0001;
+        scene.add(sunLight);
+
+        // --- SKY ---
+        const skyGeo = new THREE.SphereGeometry(400, 32, 32);
+        const skyMat = new THREE.ShaderMaterial({
+            uniforms: {
+                topColor: { value: new THREE.Color(0x0077be) },
+                bottomColor: { value: new THREE.Color(0xffffff) }
+            },
+            vertexShader: `
+                varying vec3 vWorldPosition;
+                void main() {
+                    vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+                    vWorldPosition = worldPosition.xyz;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform vec3 topColor;
+                uniform vec3 bottomColor;
+                varying vec3 vWorldPosition;
+                void main() {
+                    float h = normalize(vWorldPosition).y;
+                    gl_FragColor = vec4(mix(bottomColor, topColor, max(h, 0.0)), 1.0);
+                }
+            `,
+            side: THREE.BackSide
+        });
+        scene.add(new THREE.Mesh(skyGeo, skyMat));
+
+        // --- GROUND ---
+        const groundSize = 400;
+        const groundGeo = new THREE.PlaneGeometry(groundSize, groundSize, 100, 100);
+        const groundMat = new THREE.MeshStandardMaterial({ color: 0x3a7a30, roughness: 0.8 });
+        const ground = new THREE.Mesh(groundGeo, groundMat);
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        scene.add(ground);
+        
+        const gridHelper = new THREE.GridHelper(groundSize, 100, 0x000000, 0x000000);
+        gridHelper.material.opacity = 0.1;
+        gridHelper.material.transparent = true;
+        gridHelper.position.y = 0.01;
+        scene.add(gridHelper);
+
+        // --- STREET GRID SYSTEM ---
+        const streetMat = new THREE.MeshStandardMaterial({
+            color: 0x2a2a2a, // Dark asphalt
+            roughness: 0.9,
+            metalness: 0.1
+        });
+
+        // Horizontal streets (running along X axis)
+        for (let z = -150; z <= 150; z += 50) {
+            const street = new THREE.Mesh(
+                new THREE.PlaneGeometry(groundSize, 10),
+                streetMat
+            );
+            street.rotation.x = -Math.PI / 2;
+            street.position.y = 0.02;
+            street.position.z = z;
+            street.receiveShadow = true;
+            scene.add(street);
+
+            // Street lines (white dashed center line)
+            for (let x = -groundSize/2; x < groundSize/2; x += 8) {
+                const line = new THREE.Mesh(
+                    new THREE.PlaneGeometry(4, 0.2),
+                    new THREE.MeshBasicMaterial({ color: 0xffffff })
+                );
+                line.rotation.x = -Math.PI / 2;
+                line.position.set(x, 0.03, z);
+                scene.add(line);
+            }
+        }
+
+        // Vertical streets (running along Z axis)
+        for (let x = -150; x <= 150; x += 50) {
+            const street = new THREE.Mesh(
+                new THREE.PlaneGeometry(10, groundSize),
+                streetMat
+            );
+            street.rotation.x = -Math.PI / 2;
+            street.position.y = 0.02;
+            street.position.x = x;
+            street.receiveShadow = true;
+            scene.add(street);
+
+            // Street lines (white dashed center line)
+            for (let z = -groundSize/2; z < groundSize/2; z += 8) {
+                const line = new THREE.Mesh(
+                    new THREE.PlaneGeometry(0.2, 4),
+                    new THREE.MeshBasicMaterial({ color: 0xffffff })
+                );
+                line.rotation.x = -Math.PI / 2;
+                line.position.set(x, 0.03, z);
+                scene.add(line);
+            }
+        }
+
+        // --- DRONE MODEL ---
+        const drone = new THREE.Group();
+        
+        // Materials
+        const bodyMat = new THREE.MeshPhysicalMaterial({
+            color: 0x008080, // Teal
+            metalness: 0.1,
+            roughness: 0.3,
+            clearcoat: 1.0,
+            clearcoatRoughness: 0.1
+        });
+
+        const darkMat = new THREE.MeshStandardMaterial({
+            color: 0x1a1a1a,
+            metalness: 0.8,
+            roughness: 0.2
+        });
+        
+        const metalMat = new THREE.MeshStandardMaterial({
+            color: 0xaaaaaa,
+            metalness: 0.9,
+            roughness: 0.1
+        });
+
+        const whiteMat = new THREE.MeshPhysicalMaterial({
+            color: 0xffffff,
+            metalness: 0.0,
+            roughness: 0.4,
+            clearcoat: 0.8
+        });
+
+        // 1. Central Body - Rectangular with rounded edges
+        const bodyCore = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.4, 1.8, 16, 16, 16), bodyMat);
+        bodyCore.geometry = new THREE.BoxGeometry(1.0, 0.4, 1.8).toNonIndexed();
+
+        // Create rounded box using RoundedBoxGeometry equivalent
+        const roundedBodyGeo = new THREE.BoxGeometry(1.0, 0.4, 1.8, 8, 8, 8);
+        const positionAttribute = roundedBodyGeo.attributes.position;
+        const vertex = new THREE.Vector3();
+        const radius = 0.1;
+
+        for (let i = 0; i < positionAttribute.count; i++) {
+            vertex.fromBufferAttribute(positionAttribute, i);
+
+            const signX = Math.sign(vertex.x);
+            const signY = Math.sign(vertex.y);
+            const signZ = Math.sign(vertex.z);
+
+            const absX = Math.abs(vertex.x);
+            const absY = Math.abs(vertex.y);
+            const absZ = Math.abs(vertex.z);
+
+            if (absX > 0.4 && absY > 0.1 && absZ > 0.8) {
+                const cornerX = signX * 0.4;
+                const cornerY = signY * 0.1;
+                const cornerZ = signZ * 0.8;
+
+                const offsetX = vertex.x - cornerX;
+                const offsetY = vertex.y - cornerY;
+                const offsetZ = vertex.z - cornerZ;
+
+                const length = Math.sqrt(offsetX * offsetX + offsetY * offsetY + offsetZ * offsetZ);
+                if (length > 0) {
+                    const normalized = radius / length;
+                    vertex.x = cornerX + offsetX * normalized;
+                    vertex.y = cornerY + offsetY * normalized;
+                    vertex.z = cornerZ + offsetZ * normalized;
+                }
+            }
+
+            positionAttribute.setXYZ(i, vertex.x, vertex.y, vertex.z);
+        }
+
+        roundedBodyGeo.computeVertexNormals();
+        const bodyCoreMesh = new THREE.Mesh(roundedBodyGeo, bodyMat);
+        bodyCoreMesh.castShadow = true;
+        drone.add(bodyCoreMesh);
+
+        // --- CIRCUIT BOARD (Raspberry Pi) ---
+        const textureLoader = new THREE.TextureLoader();
+        const piTexture = textureLoader.load('https://png.pngtree.com/png-clipart/20220530/original/pngtree-raspberry-pi-png-png-image_7768115.png');
+
+        // Green PCB material with texture
+        const pcbMat = new THREE.MeshStandardMaterial({
+            map: piTexture,
+            color: 0xffffff, // White to show true texture colors
+            roughness: 0.7,
+            metalness: 0.1,
+            transparent: true,
+            alphaTest: 0.1
+        });
+
+        // Circuit board - flat rectangular box
+        const pcbGeo = new THREE.BoxGeometry(0.6, 0.03, 0.4);
+        const pcb = new THREE.Mesh(pcbGeo, pcbMat);
+        pcb.position.set(-0.15, 0.235, 0.1);
+        pcb.rotation.y = Math.PI / 2; // Rotate for better orientation
+        pcb.castShadow = true;
+        drone.add(pcb);
+
+        // Black mounting base under PCB
+        const pcbBase = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.02, 0.45), darkMat);
+        pcbBase.position.set(-0.15, 0.21, 0.1);
+        pcbBase.castShadow = true;
+        drone.add(pcbBase);
+
+        // --- BATTERY PACK ---
+        // Black battery casing material
+        const batteryMat = new THREE.MeshStandardMaterial({
+            color: 0x1a1a1a,
+            roughness: 0.4,
+            metalness: 0.2
+        });
+
+        // Battery body - rectangular box
+        const batteryGeo = new THREE.BoxGeometry(0.35, 0.12, 0.5);
+        const battery = new THREE.Mesh(batteryGeo, batteryMat);
+        battery.position.set(0.3, 0.26, 0.1);
+        battery.castShadow = true;
+        drone.add(battery);
+
+        // Battery label/stripe (colored stripe on battery)
+        const batteryLabel = new THREE.Mesh(
+            new THREE.BoxGeometry(0.36, 0.04, 0.51),
+            new THREE.MeshStandardMaterial({ color: 0xffcc00, roughness: 0.6 })
+        );
+        batteryLabel.position.set(0.3, 0.28, 0.1);
+        drone.add(batteryLabel);
+
+        // Battery terminals (small metallic contacts)
+        const terminalMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9, roughness: 0.2 });
+        const terminal1 = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.02, 0.03), terminalMat);
+        terminal1.position.set(0.2, 0.33, 0.1);
+        drone.add(terminal1);
+
+        const terminal2 = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.02, 0.03), terminalMat);
+        terminal2.position.set(0.4, 0.33, 0.1);
+        drone.add(terminal2);
+
+        // Wire connecting battery to PCB
+        const wireCurve = new THREE.CatmullRomCurve3([
+            new THREE.Vector3(0.2, 0.33, 0.1),
+            new THREE.Vector3(0.1, 0.3, 0.1),
+            new THREE.Vector3(0.05, 0.25, 0.1)
+        ]);
+        const wireGeo = new THREE.TubeGeometry(wireCurve, 20, 0.01, 8, false);
+        const wire = new THREE.Mesh(wireGeo, new THREE.MeshStandardMaterial({ color: 0xff0000 }));
+        drone.add(wire);
+
+        // Camera
+        const camBody = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 0.06, 16), darkMat);
+        camBody.rotation.x = Math.PI / 2;
+        camBody.position.set(0, 0.1, 0.8);
+        drone.add(camBody);
+
+        const lens = new THREE.Mesh(new THREE.SphereGeometry(0.06, 16, 16), new THREE.MeshPhysicalMaterial({ color: 0x000011, metalness: 1, roughness: 0, clearcoat: 1 }));
+        lens.position.set(0, 0.1, 0.86);
+        drone.add(lens);
+
+        // Arms Configuration
+        const armPositions = [
+            { x: 1.3, z: 1.3 },   // Front Left
+            { x: -1.3, z: 1.3 },  // Back Left
+            { x: -1.3, z: -1.3 }, // Front Right
+            { x: 1.3, z: -1.3 }   // Back Right
+        ];
+
+        const propellers = [];
+
+        armPositions.forEach((pos, i) => {
+            const motorPos = new THREE.Vector3(pos.x, 0.1, pos.z);
+            
+            // --- ARM (ROD) ---
+            // Thicker, clearly connecting body to motor
+            const armLength = Math.sqrt(pos.x * pos.x + pos.z * pos.z);
+            const armGeo = new THREE.CylinderGeometry(0.06, 0.06, armLength, 8);
+            const arm = new THREE.Mesh(armGeo, darkMat);
+
+            // Position arm midpoint between body center (0,0,0) and motor position
+            arm.position.set(pos.x / 2, 0, pos.z / 2);
+
+            // Create direction vector from origin to motor
+            const direction = new THREE.Vector3(pos.x, 0, pos.z).normalize();
+
+            // Cylinder default orientation is along Y axis
+            const cylinderAxis = new THREE.Vector3(0, 1, 0);
+
+            // Create quaternion to rotate from cylinder's default orientation to our desired direction
+            const quaternion = new THREE.Quaternion();
+            quaternion.setFromUnitVectors(cylinderAxis, direction);
+            arm.setRotationFromQuaternion(quaternion);
+
+            arm.castShadow = true;
+            drone.add(arm);
+
+            // --- MOTOR HOUSING ---
+            const motorGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.15, 16);
+            const motor = new THREE.Mesh(motorGeo, metalMat);
+            motor.position.copy(motorPos);
+            motor.castShadow = true;
+            drone.add(motor);
+
+            // --- PROPELLER (2-Blade Solid) ---
+            const propGroup = new THREE.Group();
+            propGroup.position.copy(motorPos);
+            propGroup.position.y += 0.1; // Sit flush on top of motor
+
+            // Hub
+            const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.06, 12), metalMat);
+            propGroup.add(hub);
+
+            // Realistic Blades
+            // Shape: Wide at root, narrow at tip, rounded
+            const bladeShape = new THREE.Shape();
+            bladeShape.moveTo(0, 0); // Root center
+            bladeShape.lineTo(0.12, 0.02); // Root edge
+            bladeShape.lineTo(0.9, 0.01); // Tip edge (narrow)
+            bladeShape.lineTo(0.9, -0.01); // Tip edge back
+            bladeShape.lineTo(0.12, -0.02); // Root edge back
+            bladeShape.lineTo(0, 0);
+
+            const extrudeSettings = { depth: 0.015, bevelEnabled: false };
+            const bladeGeo = new THREE.ExtrudeGeometry(bladeShape, extrudeSettings);
+            
+            // Create two blades
+            const blade1 = new THREE.Mesh(bladeGeo, whiteMat);
+            blade1.rotation.x = Math.PI / 2; // Stand up
+            blade1.rotation.y = 0.1; // Slight pitch
+            propGroup.add(blade1);
+
+            const blade2 = new THREE.Mesh(bladeGeo, whiteMat);
+            blade2.rotation.x = Math.PI / 2;
+            blade2.rotation.y = Math.PI + 0.1; // Opposite side + pitch
+            propGroup.add(blade2);
+
+            drone.add(propGroup);
+            propellers.push({ group: propGroup, dir: i % 2 === 0 ? 1 : -1 });
+
+            // --- PROPPELLER GUARD (ARC) ---
+            // Logic: The opening of the arc faces the center of the drone.
+            // This ensures the solid guard is always "away from the body".
+            
+            const guardRadius = 1.0;
+            const tubeRadius = 0.03;
+            
+            // Calculate angle from Motor to Center (0,0)
+            // We want the gap to be on this angle.
+            const angleToCenter = Math.atan2(-pos.z, -pos.x);
+            
+            // Define the size of the gap (e.g., 60 degrees = PI/3)
+            const gapSize = Math.PI / 3;
+            
+            // The arc starts after the gap and goes all the way around
+            // Start Angle: angleToCenter + gapSize/2
+            // End Angle: angleToCenter + (2*PI - gapSize/2)
+            // NOTE: Three.js ArcCurve parameters are (aX, aY, aRadius, aStartAngle, aEndAngle)
+            // We need to be careful with winding.
+            
+            const startAngle = angleToCenter + gapSize / 2;
+            const endAngle = angleToCenter + (2 * Math.PI) - gapSize / 2;
+            
+            // Create curve points
+            const curve = new THREE.EllipseCurve(0, 0, guardRadius, guardRadius, startAngle, endAngle, false);
+            const points = curve.getPoints(50);
+            const points3D = points.map(p => new THREE.Vector3(p.x, 0, p.y)); // Y=0 for flat plane
+            
+            const path = new THREE.CatmullRomCurve3(points3D);
+            const guardGeo = new THREE.TubeGeometry(path, 50, tubeRadius, 8, false);
+            
+            const guard = new THREE.Mesh(guardGeo, bodyMat); // Match body color
+            guard.position.copy(motorPos);
+            guard.position.y = 0.1; // Align with propeller plane
+            drone.add(guard);
+            
+            // --- SUPPORT STRUTS (Connecting Guard to Motor) ---
+            // Connect the guard ring to the motor housing at specific points.
+            // Struts radiate outward from motor center to the guard ring.
+
+            // Helper to add a strut at a specific angle relative to motor
+            const addStrut = (angle) => {
+                const strutLen = guardRadius;
+                const strutGeo = new THREE.CylinderGeometry(0.02, 0.02, strutLen, 4);
+                const strut = new THREE.Mesh(strutGeo, darkMat);
+
+                // Position strut midpoint between motor center and guard ring
+                const midDist = guardRadius / 2;
+                strut.position.set(
+                    motorPos.x + Math.cos(angle) * midDist,
+                    motorPos.y,
+                    motorPos.z + Math.sin(angle) * midDist
+                );
+
+                // Create direction vector for this strut
+                const strutDirection = new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle)).normalize();
+
+                // Rotate strut to point outward from motor center
+                const strutQuaternion = new THREE.Quaternion();
+                strutQuaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), strutDirection);
+                strut.setRotationFromQuaternion(strutQuaternion);
+
+                drone.add(strut);
+            };
+
+            // Add 3 struts evenly spaced around the solid part of the guard (avoiding the gap)
+            const numStruts = 3;
+            const solidArcLength = (endAngle - startAngle);
+            for (let s = 0; s < numStruts; s++) {
+                const strutAngle = startAngle + (solidArcLength / (numStruts + 1)) * (s + 1);
+                addStrut(strutAngle);
+            }
+
+        });
+
+        // Landing Gear System
+        // Create 4 landing legs (one under each arm)
+        const legPositions = [
+            { x: 0.8, z: 0.8 },   // Front Left
+            { x: -0.8, z: 0.8 },  // Back Left
+            { x: -0.8, z: -0.8 }, // Front Right
+            { x: 0.8, z: -0.8 }   // Back Right
+        ];
+
+        legPositions.forEach(legPos => {
+            // Vertical leg support
+            const legHeight = 0.6;
+            const legGeo = new THREE.CylinderGeometry(0.025, 0.03, legHeight, 8);
+            const leg = new THREE.Mesh(legGeo, darkMat);
+            leg.position.set(legPos.x, -legHeight / 2, legPos.z);
+            leg.castShadow = true;
+            drone.add(leg);
+
+            // Foot pad at bottom
+            const footGeo = new THREE.CylinderGeometry(0.06, 0.07, 0.03, 12);
+            const foot = new THREE.Mesh(footGeo, darkMat);
+            foot.position.set(legPos.x, -legHeight - 0.015, legPos.z);
+            foot.castShadow = true;
+            drone.add(foot);
+        });
+
+        // --- PROCEDURAL TREE GENERATION ---
+        function createSimpleTree(x, z, treeType) {
+            const tree = new THREE.Group();
+            const type = treeType || 'oak';
+
+            if (type === 'oak') {
+                // Oak tree - round foliage
+                const trunkHeight = 3.5 + Math.random() * 1;
+                const trunk = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.3, 0.4, trunkHeight, 8),
+                    new THREE.MeshStandardMaterial({ color: 0x4a2511, roughness: 0.9 })
+                );
+                trunk.position.y = trunkHeight / 2;
+                trunk.castShadow = true;
+                tree.add(trunk);
+
+                const foliageMat = new THREE.MeshStandardMaterial({ color: 0x2d5016, roughness: 0.8 });
+                const foliage1 = new THREE.Mesh(new THREE.SphereGeometry(1.8 + Math.random() * 0.4, 8, 8), foliageMat);
+                foliage1.position.y = trunkHeight + 1;
+                foliage1.castShadow = true;
+                tree.add(foliage1);
+
+                const foliage2 = new THREE.Mesh(new THREE.SphereGeometry(1.3 + Math.random() * 0.3, 8, 8), foliageMat);
+                foliage2.position.y = trunkHeight + 2.2;
+                foliage2.castShadow = true;
+                tree.add(foliage2);
+
+                const foliage3 = new THREE.Mesh(new THREE.SphereGeometry(0.9 + Math.random() * 0.2, 8, 8), foliageMat);
+                foliage3.position.y = trunkHeight + 3.2;
+                foliage3.castShadow = true;
+                tree.add(foliage3);
+
+            } else if (type === 'pine') {
+                // Pine tree - conical shape
+                const trunkHeight = 2;
+                const trunk = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.2, 0.25, trunkHeight, 8),
+                    new THREE.MeshStandardMaterial({ color: 0x3a1f0f, roughness: 0.9 })
+                );
+                trunk.position.y = trunkHeight / 2;
+                trunk.castShadow = true;
+                tree.add(trunk);
+
+                const foliageMat = new THREE.MeshStandardMaterial({ color: 0x1a3a1a, roughness: 0.8 });
+
+                // Conical foliage layers
+                for (let i = 0; i < 4; i++) {
+                    const coneRadius = 1.5 - (i * 0.3);
+                    const cone = new THREE.Mesh(
+                        new THREE.ConeGeometry(coneRadius, 2, 8),
+                        foliageMat
+                    );
+                    cone.position.y = trunkHeight + (i * 1.5) + 1;
+                    cone.castShadow = true;
+                    tree.add(cone);
+                }
+
+            } else if (type === 'palm') {
+                // Palm tree - tall trunk with leaves on top
+                const trunkHeight = 6;
+                const trunk = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.25, 0.3, trunkHeight, 8),
+                    new THREE.MeshStandardMaterial({ color: 0x8b7355, roughness: 0.9 })
+                );
+                trunk.position.y = trunkHeight / 2;
+                trunk.castShadow = true;
+                tree.add(trunk);
+
+                // Palm leaves (flat boxes radiating outward)
+                const leafMat = new THREE.MeshStandardMaterial({ color: 0x3a5a2a, roughness: 0.8 });
+                for (let i = 0; i < 6; i++) {
+                    const angle = (i / 6) * Math.PI * 2;
+                    const leaf = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.3, 0.1, 2),
+                        leafMat
+                    );
+                    leaf.position.y = trunkHeight + 0.5;
+                    leaf.position.x = Math.cos(angle) * 0.3;
+                    leaf.position.z = Math.sin(angle) * 0.3;
+                    leaf.rotation.y = angle;
+                    leaf.rotation.x = -0.3;
+                    leaf.castShadow = true;
+                    tree.add(leaf);
+                }
+            }
+
+            tree.position.set(x, 0, z);
+            return tree;
+        }
+
+        // --- PEOPLE GENERATION ---
+        function createPerson(x, z, walkDirection) {
+            const person = new THREE.Group();
+
+            // Body (simple capsule shape)
+            const bodyGeo = new THREE.CylinderGeometry(0.15, 0.15, 0.8, 8);
+            const bodyMat = new THREE.MeshStandardMaterial({
+                color: Math.random() > 0.5 ? 0x3a5a8a : 0x8a3a3a,
+                roughness: 0.8
+            });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.position.y = 0.8;
+            body.castShadow = true;
+            person.add(body);
+
+            // Head
+            const head = new THREE.Mesh(
+                new THREE.SphereGeometry(0.12, 8, 8),
+                new THREE.MeshStandardMaterial({ color: 0xd4a574, roughness: 0.9 })
+            );
+            head.position.y = 1.35;
+            head.castShadow = true;
+            person.add(head);
+
+            // Legs
+            const legMat = new THREE.MeshStandardMaterial({ color: 0x2a2a3a, roughness: 0.9 });
+            const leg1 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.6, 6), legMat);
+            leg1.position.set(-0.1, 0.3, 0);
+            leg1.castShadow = true;
+            person.add(leg1);
+
+            const leg2 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.6, 6), legMat);
+            leg2.position.set(0.1, 0.3, 0);
+            leg2.castShadow = true;
+            person.add(leg2);
+
+            person.position.set(x, 0, z);
+            person.rotation.y = walkDirection;
+
+            // Store animation data
+            person.userData = {
+                walkSpeed: 0.3 + Math.random() * 0.2,
+                walkDirection: walkDirection,
+                legPhase: Math.random() * Math.PI * 2
+            };
+
+            return person;
+        }
+
+        // --- BILLBOARD GENERATION ---
+        function createBillboard(x, z, rotation, type, imageUrl) {
+            const billboard = new THREE.Group();
+
+            // Support poles (taller and thicker, positioned BEHIND the billboard)
+            const poleMat = new THREE.MeshStandardMaterial({ color: 0x4a4a4a, metalness: 0.6, roughness: 0.4 });
+            const pole1 = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 12, 8), poleMat);
+            pole1.position.set(-5.5, 6, -0.5); // Behind the board (negative Z)
+            pole1.castShadow = true;
+            billboard.add(pole1);
+
+            const pole2 = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 12, 8), poleMat);
+            pole2.position.set(5.5, 6, -0.5); // Behind the board (negative Z)
+            pole2.castShadow = true;
+            billboard.add(pole2);
+
+            // Billboard board (much bigger: 12m wide × 7m tall)
+            const boardGeo = new THREE.BoxGeometry(12, 7, 0.2);
+            const boardMat = new THREE.MeshStandardMaterial({
+                color: 0xffffff,
+                roughness: 0.3,
+                metalness: 0.2
+            });
+
+            if (type === 'text1') {
+                // "Welcome To Kurunegala" - create canvas texture
+                const canvas = document.createElement('canvas');
+                canvas.width = 512;
+                canvas.height = 256;
+                const ctx = canvas.getContext('2d');
+
+                // Background
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, 512, 256);
+
+                // Border
+                ctx.strokeStyle = '#333333';
+                ctx.lineWidth = 8;
+                ctx.strokeRect(0, 0, 512, 256);
+
+                // Text
+                ctx.fillStyle = '#1a5a8a';
+                ctx.font = 'bold 48px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('Welcome To', 256, 100);
+                ctx.font = 'bold 56px Arial';
+                ctx.fillStyle = '#8a1a1a';
+                ctx.fillText('Kurunegala', 256, 180);
+
+                const texture = new THREE.CanvasTexture(canvas);
+                boardMat.map = texture;
+
+            } else if (type === 'image') {
+                // Image billboard - create a styled placeholder
+                const canvas = document.createElement('canvas');
+                canvas.width = 1024;
+                canvas.height = 1024;
+                const ctx = canvas.getContext('2d');
+
+                // Gradient background
+                const gradient = ctx.createLinearGradient(0, 0, 1024, 1024);
+                gradient.addColorStop(0, '#4a90e2');
+                gradient.addColorStop(1, '#357abd');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, 1024, 1024);
+
+                // Border
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 12;
+                ctx.strokeRect(20, 20, 984, 984);
+
+                // Text
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 80px Arial';
+                ctx.textAlign = 'center';
+                ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                ctx.shadowBlur = 10;
+                ctx.fillText('Photo Billboard', 512, 450);
+                ctx.font = 'bold 48px Arial';
+                ctx.fillText('Your Image Here', 512, 550);
+
+                const fallbackTexture = new THREE.CanvasTexture(canvas);
+                boardMat.map = fallbackTexture;
+
+                // Try to load actual image
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = () => {
+                    try {
+                        const imgCanvas = document.createElement('canvas');
+                        imgCanvas.width = 1024;
+                        imgCanvas.height = 1024;
+                        const imgCtx = imgCanvas.getContext('2d');
+
+                        // Draw white background
+                        imgCtx.fillStyle = '#ffffff';
+                        imgCtx.fillRect(0, 0, 1024, 1024);
+
+                        // Calculate aspect-fit dimensions
+                        const scale = Math.min(1024 / img.width, 1024 / img.height);
+                        const w = img.width * scale;
+                        const h = img.height * scale;
+                        const x = (1024 - w) / 2;
+                        const y = (1024 - h) / 2;
+
+                        imgCtx.drawImage(img, x, y, w, h);
+
+                        const texture = new THREE.CanvasTexture(imgCanvas);
+                        boardMat.map = texture;
+                        boardMat.needsUpdate = true;
+                    } catch (e) {
+                        console.error('Error processing image:', e);
+                    }
+                };
+                img.onerror = () => {
+                    console.log('Image loading failed - using styled placeholder');
+                };
+                img.src = imageUrl;
+
+            } else if (type === 'text2') {
+                // "Add Your Own" billboard
+                const canvas = document.createElement('canvas');
+                canvas.width = 512;
+                canvas.height = 256;
+                const ctx = canvas.getContext('2d');
+
+                // Background gradient
+                const gradient = ctx.createLinearGradient(0, 0, 0, 256);
+                gradient.addColorStop(0, '#ffcc00');
+                gradient.addColorStop(1, '#ff6600');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, 512, 256);
+
+                // Text
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 64px Arial';
+                ctx.textAlign = 'center';
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 4;
+                ctx.strokeText('Add Your Own', 256, 140);
+                ctx.fillText('Add Your Own', 256, 140);
+
+                const texture = new THREE.CanvasTexture(canvas);
+                boardMat.map = texture;
+            }
+
+            const board = new THREE.Mesh(boardGeo, boardMat);
+            board.position.y = 9; // Higher position (9m above ground)
+            board.castShadow = true;
+            board.receiveShadow = true;
+            billboard.add(board);
+
+            billboard.position.set(x, 0, z);
+            billboard.rotation.y = rotation;
+
+            return billboard;
+        }
+
+        // --- ROOFTOP COMPANY SIGN ---
+        function createRooftopSign(buildingHeight, imageUrl) {
+            const billboard = new THREE.Group();
+
+            // Support poles (standing vertical on rooftop, positioned BEHIND the billboard)
+            const poleMat = new THREE.MeshStandardMaterial({ color: 0x4a4a4a, metalness: 0.6, roughness: 0.4 });
+            const poleHeight = 6;
+            const pole1 = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, poleHeight, 8), poleMat);
+            pole1.position.set(-2.7, buildingHeight + poleHeight / 2 + 0.5, -0.6); // Moved behind board
+            pole1.castShadow = true;
+            billboard.add(pole1);
+
+            const pole2 = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, poleHeight, 8), poleMat);
+            pole2.position.set(2.7, buildingHeight + poleHeight / 2 + 0.5, -0.6); // Moved behind board
+            pole2.castShadow = true;
+            billboard.add(pole2);
+
+            // Billboard board (vertical, standing up like street billboards)
+            const boardGeo = new THREE.BoxGeometry(6, 3.5, 0.2);
+
+            const boardMat = new THREE.MeshStandardMaterial({
+                color: 0xffffff,
+                roughness: 0.3,
+                metalness: 0.2
+            });
+
+            // Create immediate placeholder
+            const canvas = document.createElement('canvas');
+            canvas.width = 1024;
+            canvas.height = 600;
+            const ctx = canvas.getContext('2d');
+
+            // White background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, 1024, 600);
+
+            // Border
+            ctx.strokeStyle = '#1a5a8a';
+            ctx.lineWidth = 12;
+            ctx.strokeRect(20, 20, 984, 560);
+
+            // Large text
+            ctx.fillStyle = '#1a5a8a';
+            ctx.font = 'bold 100px Arial';
+            ctx.textAlign = 'center';
+            ctx.shadowColor = 'rgba(0,0,0,0.3)';
+            ctx.shadowBlur = 5;
+            ctx.fillText('CYCLOMAX', 512, 350);
+
+            const placeholderTexture = new THREE.CanvasTexture(canvas);
+            boardMat.map = placeholderTexture;
+
+            // Try to load actual logo
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => {
+                try {
+                    const logoCanvas = document.createElement('canvas');
+                    logoCanvas.width = 1024;
+                    logoCanvas.height = 600;
+                    const logoCtx = logoCanvas.getContext('2d');
+
+                    // White background
+                    logoCtx.fillStyle = '#ffffff';
+                    logoCtx.fillRect(0, 0, 1024, 600);
+
+                    // Border
+                    logoCtx.strokeStyle = '#1a5a8a';
+                    logoCtx.lineWidth = 12;
+                    logoCtx.strokeRect(20, 20, 984, 560);
+
+                    // Draw logo centered
+                    const scale = Math.min(900 / img.width, 500 / img.height);
+                    const w = img.width * scale;
+                    const h = img.height * scale;
+                    const x = (1024 - w) / 2;
+                    const y = (600 - h) / 2;
+
+                    logoCtx.drawImage(img, x, y, w, h);
+
+                    const texture = new THREE.CanvasTexture(logoCanvas);
+                    boardMat.map = texture;
+                    boardMat.needsUpdate = true;
+                } catch (e) {
+                    console.log('Using text placeholder for rooftop sign');
+                }
+            };
+            img.onerror = () => {
+                console.log('Rooftop billboard: Using CYCLOMAX text (image failed to load)');
+            };
+            img.src = imageUrl;
+
+            const board = new THREE.Mesh(boardGeo, boardMat);
+            board.position.y = buildingHeight + poleHeight / 2 + 0.5;
+            board.castShadow = true;
+            board.receiveShadow = true;
+            billboard.add(board);
+
+            return billboard;
+        }
+
+        // --- PROCEDURAL BUILDING GENERATION ---
+        function createWindowPattern(baseColor) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+
+            // Building base color (now customizable)
+            ctx.fillStyle = baseColor;
+            ctx.fillRect(0, 0, 256, 256);
+
+            // Windows (4 columns × 8 rows)
+            ctx.fillStyle = '#ffff99';
+            for (let y = 0; y < 8; y++) {
+                for (let x = 0; x < 4; x++) {
+                    // 70% chance window is lit
+                    if (Math.random() > 0.3) {
+                        ctx.fillRect(x * 64 + 10, y * 32 + 5, 40, 20);
+                    }
+                }
+            }
+
+            return canvas;
+        }
+
+        function createBuilding(x, z, width, height, depth, colorType) {
+            const building = new THREE.Group();
+
+            // Building color variations
+            const colorPalette = {
+                gray: '#505060',
+                beige: '#d4c5a0',
+                blue: '#4a6b8a',
+                red: '#8a4a4a',
+                white: '#e0e0e0'
+            };
+
+            const selectedColor = colorPalette[colorType || 'gray'];
+
+            // Building body
+            const bodyGeo = new THREE.BoxGeometry(width, height, depth);
+            const windowTexture = new THREE.CanvasTexture(createWindowPattern(selectedColor));
+            windowTexture.wrapS = THREE.RepeatWrapping;
+            windowTexture.wrapT = THREE.RepeatWrapping;
+            windowTexture.repeat.set(1, Math.ceil(height / 10));
+
+            const bodyMat = new THREE.MeshStandardMaterial({
+                map: windowTexture,
+                roughness: 0.7,
+                metalness: 0.2
+            });
+
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.position.y = height / 2;
+            body.castShadow = true;
+            body.receiveShadow = true;
+            building.add(body);
+
+            // Roof
+            const roofGeo = new THREE.BoxGeometry(width + 0.2, 0.5, depth + 0.2);
+            const roofMat = new THREE.MeshStandardMaterial({
+                color: 0x3a3a3a,
+                roughness: 0.8,
+                metalness: 0.1
+            });
+            const roof = new THREE.Mesh(roofGeo, roofMat);
+            roof.position.y = height + 0.25;
+            roof.castShadow = true;
+            building.add(roof);
+
+            // Entrance (darker doorway at base)
+            const entranceGeo = new THREE.BoxGeometry(width * 0.3, height * 0.15, depth * 0.02);
+            const entranceMat = new THREE.MeshStandardMaterial({
+                color: 0x1a1a1a,
+                roughness: 0.9
+            });
+            const entrance = new THREE.Mesh(entranceGeo, entranceMat);
+            entrance.position.y = height * 0.075;
+            entrance.position.z = depth / 2 + 0.01;
+            building.add(entrance);
+
+            building.position.set(x, 0, z);
+            return building;
+        }
+
+        // --- COLLISION DETECTION HELPER ---
+        function isTooClose(x, z, obstacles, minDist) {
+            return obstacles.some(obj => {
+                const dx = obj.position.x - x;
+                const dz = obj.position.z - z;
+                return Math.sqrt(dx * dx + dz * dz) < minDist;
+            });
+        }
+
+        drone.position.y = 3;
+        scene.add(drone);
+
+        // --- ENVIRONMENT POPULATION ---
+        const buildings = [];
+        const trees = [];
+        const buildingData = []; // Store building info for rooftop sign
+
+        // Create 15 buildings with varied heights
+        let buildingAttempts = 0;
+        while (buildings.length < 15 && buildingAttempts < 100) {
+            buildingAttempts++;
+            const x = Math.random() * 80 - 40;
+            const z = Math.random() * 80 - 40;
+
+            // Avoid drone starting position
+            const distFromDrone = Math.sqrt(x * x + z * z);
+            if (distFromDrone < 15) continue;
+
+            // Avoid other buildings
+            if (isTooClose(x, z, buildings, 10)) continue;
+
+            // Random dimensions
+            const width = 4 + Math.random() * 4;
+            const height = 8 + Math.random() * 25;
+            const depth = 4 + Math.random() * 4;
+
+            // Random building color
+            const colors = ['gray', 'beige', 'blue', 'red', 'white'];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+            const building = createBuilding(x, z, width, height, depth, randomColor);
+            scene.add(building);
+            buildings.push(building);
+
+            // Store building data for rooftop sign
+            buildingData.push({ building, x, z, height, width, depth });
+        }
+
+        // Add rooftop company sign to a smaller/medium building (more realistic)
+        if (buildingData.length > 0) {
+            // Sort buildings by height
+            const sortedBuildings = [...buildingData].sort((a, b) => a.height - b.height);
+
+            // Pick a building in the lower-middle range (around 25-40% of the way up)
+            const targetIndex = Math.floor(sortedBuildings.length * 0.3);
+            const selectedBuilding = sortedBuildings[targetIndex];
+
+            // Create and add rooftop sign
+            const rooftopSign = createRooftopSign(
+                selectedBuilding.height,
+                'https://cyclomax.net/software/wp-content/uploads/2024/02/rsz_asset-60.png'
+            );
+            rooftopSign.position.set(selectedBuilding.x, 0, selectedBuilding.z);
+            scene.add(rooftopSign);
+        }
+
+        // Create 30 trees
+        let treeAttempts = 0;
+        while (trees.length < 30 && treeAttempts < 150) {
+            treeAttempts++;
+            const x = Math.random() * 100 - 50;
+            const z = Math.random() * 100 - 50;
+
+            // Avoid drone starting position
+            const distFromDrone = Math.sqrt(x * x + z * z);
+            if (distFromDrone < 10) continue;
+
+            // Avoid buildings
+            if (isTooClose(x, z, buildings, 5)) continue;
+
+            // Avoid other trees
+            if (isTooClose(x, z, trees, 4)) continue;
+
+            // Random tree type
+            const treeTypes = ['oak', 'pine', 'palm'];
+            const randomType = treeTypes[Math.floor(Math.random() * treeTypes.length)];
+
+            const tree = createSimpleTree(x, z, randomType);
+            scene.add(tree);
+            trees.push(tree);
+        }
+
+        // --- ADD PEOPLE ---
+        const people = [];
+
+        // Create 20 people walking on streets
+        for (let i = 0; i < 20; i++) {
+            // Random position on streets (near street coordinates)
+            const streetCoords = [-150, -100, -50, 0, 50, 100, 150];
+            const streetIndex = Math.floor(Math.random() * streetCoords.length);
+
+            let x, z, walkDirection;
+            if (Math.random() > 0.5) {
+                // Walking along X axis
+                x = Math.random() * 200 - 100;
+                z = streetCoords[streetIndex] + (Math.random() * 6 - 3);
+                walkDirection = Math.random() > 0.5 ? 0 : Math.PI;
+            } else {
+                // Walking along Z axis
+                x = streetCoords[streetIndex] + (Math.random() * 6 - 3);
+                z = Math.random() * 200 - 100;
+                walkDirection = Math.random() > 0.5 ? Math.PI/2 : -Math.PI/2;
+            }
+
+            const person = createPerson(x, z, walkDirection);
+            scene.add(person);
+            people.push(person);
+        }
+
+        // --- ADD BILLBOARDS ---
+        const billboards = [];
+
+        // Billboard 1: "Welcome To Kurunegala"
+        const billboard1 = createBillboard(30, -45, Math.PI/4, 'text1');
+        scene.add(billboard1);
+        billboards.push(billboard1);
+
+        // Billboard 2: Image from URL
+        const billboard2 = createBillboard(-35, 40, -Math.PI/3, 'image',
+            'https://scontent.fcmb1-2.fna.fbcdn.net/v/t39.30808-6/535137964_2422037501529218_6810998782671218385_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=13d280&_nc_eui2=AeGS1k4gdEv6_UvYcyKwFx-_ZVis1a92KbhlWKzVr3YpuHkRwseslu9WZfyqbjukeglhSeV8Fu0OVO4QWMvVSwKb&_nc_ohc=9If9NM8dBzcQ7kNvwE4Cg3_&_nc_oc=AdlRO5XDAoK1WX2J8d_L4EJuJ86adNihNDmYkvBKSJc7jne8jZiZmeWZ0tKhCnfZ3cU&_nc_zt=23&_nc_ht=scontent.fcmb1-2.fna&_nc_gid=ngAOVzC-TlzkviCoxluwbg&oh=00_Afv-gHVXIX7TqnZ3oM6v0RZ9dYO-GpziJHxeOX2cAoQICw&oe=699B0EDC');
+        scene.add(billboard2);
+        billboards.push(billboard2);
+
+        // Billboard 3: "Add Your Own"
+        const billboard3 = createBillboard(45, 50, Math.PI/6, 'text2');
+        scene.add(billboard3);
+        billboards.push(billboard3);
+
+        // --- PHYSICS STATE ---
+        const droneState = {
+            position: new THREE.Vector3(0, 3, 0),
+            velocity: new THREE.Vector3(0, 0, 0),
+            motorsOn: false,
+            tilt: { x: 0, z: 0 }
+        };
+
+        const keys = {};
+        document.addEventListener('keydown', (e) => keys[e.code] = true);
+        document.addEventListener('keyup', (e) => keys[e.code] = false);
+
+        // --- HELPERS ---
+        function updateMotorDisplay() {
+            const statusEl = document.getElementById('motor-display');
+            const propEl = document.getElementById('prop-status');
+            if (droneState.motorsOn) {
+                statusEl.textContent = 'ACTIVE';
+                statusEl.className = 'status on';
+                propEl.textContent = 'ACTIVE';
+                propEl.className = 'stat-value on';
+                document.getElementById('warning').style.display = 'none';
+            } else {
+                statusEl.textContent = 'OFF';
+                statusEl.className = 'status off';
+                propEl.textContent = 'OFF';
+                propEl.className = 'stat-value off';
+            }
+        }
+
+        // --- COLLISION DETECTION SYSTEM ---
+        // Store building dimensions for collision checking
+        const buildingColliders = [];
+        buildings.forEach(building => {
+            // Extract dimensions from building group
+            let width = 0, height = 0, depth = 0;
+            building.traverse(child => {
+                if (child.isMesh && child.geometry.type === 'BoxGeometry') {
+                    const params = child.geometry.parameters;
+                    if (params.height > height) { // Find the main body
+                        width = params.width;
+                        height = params.height;
+                        depth = params.depth;
+                    }
+                }
+            });
+            buildingColliders.push({
+                position: building.position,
+                width: width,
+                height: height,
+                depth: depth
+            });
+        });
+
+        // Store tree dimensions for collision checking
+        const treeColliders = [];
+        trees.forEach(tree => {
+            // Trees are approximately 7m tall, 4m wide (foliage diameter)
+            treeColliders.push({
+                position: tree.position,
+                radius: 2.5, // Collision radius
+                height: 7.5  // Tree height
+            });
+        });
+
+        // Collision detection function
+        function checkCollision(newPos) {
+            const droneRadius = 1.5; // Drone collision radius (including propeller guards)
+            const droneHeight = 0.8; // Drone height
+
+            // Check building collisions (walls only, can land on top)
+            for (let collider of buildingColliders) {
+                const dx = newPos.x - collider.position.x;
+                const dz = newPos.z - collider.position.z;
+
+                // Check if drone is within building's horizontal bounds
+                const halfWidth = collider.width / 2 + droneRadius;
+                const halfDepth = collider.depth / 2 + droneRadius;
+
+                if (Math.abs(dx) < halfWidth && Math.abs(dz) < halfDepth) {
+                    // Drone is inside building's horizontal footprint
+                    // Allow if drone is above the building (landing on top)
+                    if (newPos.y < collider.height) {
+                        // Collision with building walls
+                        return { collision: true, type: 'building', collider: collider };
+                    }
+                }
+            }
+
+            // Check tree collisions (full cylindrical volume)
+            for (let collider of treeColliders) {
+                const dx = newPos.x - collider.position.x;
+                const dz = newPos.z - collider.position.z;
+                const distance = Math.sqrt(dx * dx + dz * dz);
+
+                // Check if within tree's horizontal radius and height
+                if (distance < (collider.radius + droneRadius)) {
+                    if (newPos.y < collider.height && newPos.y > 0) {
+                        // Collision with tree
+                        return { collision: true, type: 'tree', collider: collider };
+                    }
+                }
+            }
+
+            return { collision: false };
+        }
+
+        // Resolve collision by pushing drone away
+        function resolveCollision(dronePos, collisionInfo) {
+            if (collisionInfo.type === 'building') {
+                const collider = collisionInfo.collider;
+                const dx = dronePos.x - collider.position.x;
+                const dz = dronePos.z - collider.position.z;
+
+                // Push drone to nearest edge
+                const halfWidth = collider.width / 2 + 1.5;
+                const halfDepth = collider.depth / 2 + 1.5;
+
+                // Determine which edge is closest
+                const distToLeft = Math.abs(dx + halfWidth);
+                const distToRight = Math.abs(dx - halfWidth);
+                const distToFront = Math.abs(dz + halfDepth);
+                const distToBack = Math.abs(dz - halfDepth);
+
+                const minDist = Math.min(distToLeft, distToRight, distToFront, distToBack);
+
+                if (minDist === distToLeft) {
+                    dronePos.x = collider.position.x - halfWidth;
+                } else if (minDist === distToRight) {
+                    dronePos.x = collider.position.x + halfWidth;
+                } else if (minDist === distToFront) {
+                    dronePos.z = collider.position.z - halfDepth;
+                } else {
+                    dronePos.z = collider.position.z + halfDepth;
+                }
+
+                // Stop velocity in collision direction
+                droneState.velocity.x *= 0.3;
+                droneState.velocity.z *= 0.3;
+
+            } else if (collisionInfo.type === 'tree') {
+                const collider = collisionInfo.collider;
+                const dx = dronePos.x - collider.position.x;
+                const dz = dronePos.z - collider.position.z;
+                const distance = Math.sqrt(dx * dx + dz * dz);
+
+                // Push drone away from tree center
+                if (distance > 0) {
+                    const pushDistance = collider.radius + 1.5;
+                    dronePos.x = collider.position.x + (dx / distance) * pushDistance;
+                    dronePos.z = collider.position.z + (dz / distance) * pushDistance;
+                }
+
+                // Stop velocity
+                droneState.velocity.x *= 0.3;
+                droneState.velocity.z *= 0.3;
+            }
+        }
+
+        // --- CONTROLS ---
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.maxPolarAngle = Math.PI / 2 - 0.1;
+        controls.target.copy(drone.position);
+
+        // --- MOBILE TOUCH CONTROLS ---
+        class VirtualJoystick {
+            constructor(containerId, baseId, stickId) {
+                this.container = document.getElementById(containerId);
+                this.base = document.getElementById(baseId);
+                this.stick = document.getElementById(stickId);
+                this.active = false;
+                this.centerX = 0;
+                this.centerY = 0;
+                this.deltaX = 0;
+                this.deltaY = 0;
+                this.maxDistance = 30; // Max stick movement in pixels
+
+                this.setupEvents();
+            }
+
+            setupEvents() {
+                this.container.addEventListener('touchstart', (e) => this.onTouchStart(e), { passive: false });
+                this.container.addEventListener('touchmove', (e) => this.onTouchMove(e), { passive: false });
+                this.container.addEventListener('touchend', (e) => this.onTouchEnd(e), { passive: false });
+                this.container.addEventListener('touchcancel', (e) => this.onTouchEnd(e), { passive: false });
+            }
+
+            onTouchStart(e) {
+                e.preventDefault();
+                this.active = true;
+                const rect = this.base.getBoundingClientRect();
+                this.centerX = rect.left + rect.width / 2;
+                this.centerY = rect.top + rect.height / 2;
+            }
+
+            onTouchMove(e) {
+                if (!this.active) return;
+                e.preventDefault();
+
+                const touch = e.touches[0];
+                let dx = touch.clientX - this.centerX;
+                let dy = touch.clientY - this.centerY;
+
+                // Limit to max distance (circular boundary)
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance > this.maxDistance) {
+                    dx = (dx / distance) * this.maxDistance;
+                    dy = (dy / distance) * this.maxDistance;
+                }
+
+                // Update stick position
+                this.stick.style.transform = `translate(${dx}px, ${dy}px)`;
+
+                // Normalize to -1 to 1 range
+                this.deltaX = dx / this.maxDistance;
+                this.deltaY = dy / this.maxDistance;
+            }
+
+            onTouchEnd(e) {
+                e.preventDefault();
+                this.active = false;
+                this.deltaX = 0;
+                this.deltaY = 0;
+                this.stick.style.transform = 'translate(0px, 0px)';
+            }
+
+            getInput() {
+                return { x: this.deltaX, y: this.deltaY, active: this.active };
+            }
+        }
+
+        let leftJoystick = null;
+        let rightJoystick = null;
+        let isMobile = false;
+
+        if (isMobileDevice()) {
+            isMobile = true;
+            document.getElementById('mobile-controls').style.display = 'block';
+            document.getElementById('controls-panel').style.display = 'none'; // Hide keyboard controls
+
+            leftJoystick = new VirtualJoystick('left-joystick-container', 'left-joystick-base', 'left-joystick-stick');
+            rightJoystick = new VirtualJoystick('right-joystick-container', 'right-joystick-base', 'right-joystick-stick');
+
+            // Disable OrbitControls on mobile (conflicts with touch)
+            controls.enabled = false;
+            controls.enableZoom = false;
+            controls.enablePan = false;
+
+            // Motor toggle button
+            document.getElementById('motor-toggle-btn').addEventListener('touchend', (e) => {
+                e.preventDefault();
+                droneState.motorsOn = !droneState.motorsOn;
+                updateMotorDisplay();
+                const btnStatus = document.getElementById('motor-btn-status');
+                btnStatus.textContent = droneState.motorsOn ? 'ON' : 'OFF';
+                btnStatus.style.color = droneState.motorsOn ? '#0f8' : '#f44';
+            }, { passive: false });
+
+            // Two-finger camera gestures (pinch zoom & pan)
+            let lastTouchDistance = 0;
+            let lastTouchMidpoint = { x: 0, y: 0 };
+            let cameraDistance = Math.sqrt(
+                Math.pow(camera.position.x - drone.position.x, 2) +
+                Math.pow(camera.position.y - drone.position.y, 2) +
+                Math.pow(camera.position.z - drone.position.z, 2)
+            );
+
+            renderer.domElement.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 2) {
+                    const touch1 = e.touches[0];
+                    const touch2 = e.touches[1];
+                    lastTouchDistance = Math.hypot(
+                        touch2.clientX - touch1.clientX,
+                        touch2.clientY - touch1.clientY
+                    );
+                    lastTouchMidpoint.x = (touch1.clientX + touch2.clientX) / 2;
+                    lastTouchMidpoint.y = (touch1.clientY + touch2.clientY) / 2;
+                }
+            }, { passive: true });
+
+            renderer.domElement.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 2) {
+                    e.preventDefault();
+                    const touch1 = e.touches[0];
+                    const touch2 = e.touches[1];
+
+                    // Pinch zoom - calculate distance between two fingers
+                    const distance = Math.hypot(
+                        touch2.clientX - touch1.clientX,
+                        touch2.clientY - touch1.clientY
+                    );
+
+                    // Calculate zoom factor based on finger movement
+                    const zoomFactor = distance / lastTouchDistance;
+
+                    // Update camera distance with smooth zoom (pinch in = zoom in, pinch out = zoom out)
+                    cameraDistance = cameraDistance / zoomFactor;
+                    cameraDistance = Math.max(5, Math.min(50, cameraDistance)); // Limit zoom range (5m to 50m)
+
+                    // Calculate direction from drone to camera
+                    const dirX = camera.position.x - drone.position.x;
+                    const dirY = camera.position.y - drone.position.y;
+                    const dirZ = camera.position.z - drone.position.z;
+                    const currentDist = Math.sqrt(dirX * dirX + dirY * dirY + dirZ * dirZ);
+
+                    // Normalize and apply new distance
+                    if (currentDist > 0) {
+                        camera.position.x = drone.position.x + (dirX / currentDist) * cameraDistance;
+                        camera.position.y = drone.position.y + (dirY / currentDist) * cameraDistance;
+                        camera.position.z = drone.position.z + (dirZ / currentDist) * cameraDistance;
+                    }
+
+                    lastTouchDistance = distance;
+
+                    // Pan - move camera target when dragging with two fingers
+                    const midX = (touch1.clientX + touch2.clientX) / 2;
+                    const midY = (touch1.clientY + touch2.clientY) / 2;
+                    const panX = (midX - lastTouchMidpoint.x) * 0.05;
+                    const panZ = (midY - lastTouchMidpoint.y) * 0.05;
+
+                    // Adjust camera target position for panning
+                    controls.target.x += panX;
+                    controls.target.z += panZ;
+
+                    lastTouchMidpoint.x = midX;
+                    lastTouchMidpoint.y = midY;
+                }
+            }, { passive: false });
+        }
+
+        const clock = new THREE.Clock();
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = Math.min(clock.getDelta(), 0.1);
+
+            // Input Handling - Support both keyboard and touch
+            if (!isMobile) {
+                // Keyboard motor toggle
+                if (keys['KeyP']) {
+                    if (!droneState.motorsOn) {
+                        droneState.motorsOn = true;
+                        updateMotorDisplay();
+                        keys['KeyP'] = false;
+                    } else {
+                        droneState.motorsOn = false;
+                        updateMotorDisplay();
+                        keys['KeyP'] = false;
+                    }
+                }
+            }
+
+            // Physics
+            if (droneState.motorsOn) {
+                droneState.velocity.y *= 0.9;
+                droneState.velocity.x *= 0.92;
+                droneState.velocity.z *= 0.92;
+
+                // Touch joystick controls (mobile)
+                if (isMobile && leftJoystick && rightJoystick) {
+                    const leftInput = leftJoystick.getInput();
+                    const rightInput = rightJoystick.getInput();
+
+                    // Left joystick: Altitude control (Y-axis inverted)
+                    if (leftInput.active) {
+                        droneState.velocity.y += -leftInput.y * 0.8; // Up = negative Y in screen space
+                    }
+
+                    // Right joystick: Horizontal movement
+                    if (rightInput.active) {
+                        droneState.velocity.x += rightInput.x * 0.5;
+                        droneState.velocity.z += rightInput.y * 0.5; // Forward/back
+                        droneState.tilt.z = -rightInput.x * 0.2;
+                    } else {
+                        droneState.tilt.z *= 0.9;
+                    }
+                }
+
+                // Keyboard controls (desktop - always available as fallback)
+                if (keys['ArrowUp'] || keys['KeyW']) droneState.velocity.y += 0.8;
+                if (keys['ArrowDown'] || keys['KeyS']) droneState.velocity.y -= 0.8;
+
+                if (keys['ArrowLeft'] || keys['KeyA']) {
+                    droneState.velocity.x -= 0.5;
+                    droneState.tilt.z = 0.2;
+                } else if (keys['ArrowRight'] || keys['KeyD']) {
+                    droneState.velocity.x += 0.5;
+                    droneState.tilt.z = -0.2;
+                } else if (!isMobile || !rightJoystick || !rightJoystick.getInput().active) {
+                    droneState.tilt.z *= 0.9;
+                }
+            } else {
+                droneState.velocity.y -= 9.8 * delta;
+                droneState.tilt.z *= 0.95;
+                if (drone.position.y > 1.5) document.getElementById('warning').style.display = 'block';
+            }
+
+            drone.position.add(droneState.velocity.clone().multiplyScalar(delta));
+
+            // --- COLLISION DETECTION ---
+            const collisionResult = checkCollision(drone.position);
+            if (collisionResult.collision) {
+                resolveCollision(drone.position, collisionResult);
+            }
+
+            if (drone.position.y < 0.5) {
+                drone.position.y = 0.5;
+                droneState.velocity.y = 0;
+                droneState.velocity.x *= 0.5;
+                droneState.velocity.z *= 0.5;
+                document.getElementById('warning').style.display = 'none';
+            }
+
+            drone.rotation.z = droneState.tilt.z;
+            drone.rotation.x = droneState.velocity.z * 0.05;
+
+            propellers.forEach(p => {
+                if (droneState.motorsOn) p.group.rotation.y += 0.5 * p.dir;
+            });
+
+            // --- ANIMATE PEOPLE ---
+            people.forEach(person => {
+                const data = person.userData;
+
+                // Move person forward
+                const moveX = Math.sin(data.walkDirection) * data.walkSpeed * delta;
+                const moveZ = Math.cos(data.walkDirection) * data.walkSpeed * delta;
+                person.position.x += moveX;
+                person.position.z += moveZ;
+
+                // Leg animation (simple bob)
+                data.legPhase += delta * 5;
+                const leg1 = person.children[2]; // First leg
+                const leg2 = person.children[3]; // Second leg
+                if (leg1 && leg2) {
+                    leg1.rotation.x = Math.sin(data.legPhase) * 0.3;
+                    leg2.rotation.x = Math.sin(data.legPhase + Math.PI) * 0.3;
+                }
+
+                // Wrap around when they go off-screen
+                if (person.position.x > 200) person.position.x = -200;
+                if (person.position.x < -200) person.position.x = 200;
+                if (person.position.z > 200) person.position.z = -200;
+                if (person.position.z < -200) person.position.z = 200;
+            });
+
+            controls.target.lerp(drone.position, 0.1);
+            controls.update();
+
+            // --- PERFORMANCE OPTIMIZATION: Shadow Distance Culling ---
+            // Only enable shadows for objects within 50m of drone
+            buildings.forEach(b => {
+                const dist = b.position.distanceTo(drone.position);
+                b.traverse(mesh => {
+                    if (mesh.isMesh) {
+                        mesh.castShadow = dist < 50;
+                    }
+                });
+            });
+
+            trees.forEach(t => {
+                const dist = t.position.distanceTo(drone.position);
+                t.traverse(mesh => {
+                    if (mesh.isMesh) {
+                        mesh.castShadow = dist < 50;
+                    }
+                });
+            });
+
+            document.getElementById('altitude').textContent = drone.position.y.toFixed(1) + ' m';
+            document.getElementById('pos-x').textContent = drone.position.x.toFixed(1) + ' m';
+            document.getElementById('pos-z').textContent = drone.position.z.toFixed(1) + ' m';
+            document.getElementById('speed').textContent = droneState.velocity.length().toFixed(1) + ' m/s';
+
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate();
+    </script>
+</body>
+</html>

@@ -9,6 +9,7 @@ import '../providers/user_provider.dart';
 import '../widgets/ai_division_search_field.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/glass_date_picker_field.dart';
+import '../widgets/app_bar_glass.dart';
 import 'dashboard_screen.dart';
 
 class ProfileSetupScreen extends StatefulWidget {
@@ -183,25 +184,22 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Complete Your Profile',
-          style: GoogleFonts.spaceGrotesk(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        elevation: 0,
-      ),
-      body: Stack(
-        children: [
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      body: SafeArea(
+        child: Column(
+          children: [
+            AppBarGlass(
+              mode: AppBarMode.title,
+              title: 'Complete Your Profile',
+              showProfileIcon: false,
+            ),
+            Expanded(
+              child: Stack(
                 children: [
+                  SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                   // Introduction Text
                   Text(
                     'Welcome!',
@@ -467,50 +465,53 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 ],
               ),
             ),
-          ),
 
-          // Loading Overlay
-          if (_isLoading)
-            Positioned.fill(
-              child: Container(
-                color: Colors.black.withValues(alpha: 0.5),
-                child: Center(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                      child: Container(
-                        padding: const EdgeInsets.all(32),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.1)
-                              : Colors.white.withValues(alpha: 0.8),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const CircularProgressIndicator(
-                              color: AppConstants.limeGreen,
-                              strokeWidth: 3,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Updating profile...',
-                              style: GoogleFonts.spaceGrotesk(
-                                fontSize: 14,
-                                color: isDark ? Colors.white : Colors.black87,
+                    // Loading Overlay
+                    if (_isLoading)
+                      Positioned.fill(
+                        child: Container(
+                          color: Colors.black.withValues(alpha: 0.5),
+                          child: Center(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                                child: Container(
+                                  padding: const EdgeInsets.all(32),
+                                  decoration: BoxDecoration(
+                                    color: isDark
+                                        ? Colors.white.withValues(alpha: 0.1)
+                                        : Colors.white.withValues(alpha: 0.8),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const CircularProgressIndicator(
+                                        color: AppConstants.limeGreen,
+                                        strokeWidth: 3,
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        'Updating profile...',
+                                        style: GoogleFonts.spaceGrotesk(
+                                          fontSize: 14,
+                                          color: isDark ? Colors.white : Colors.black87,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                  ),
+                  ],
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }

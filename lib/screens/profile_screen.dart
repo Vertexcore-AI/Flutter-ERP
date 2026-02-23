@@ -6,6 +6,7 @@ import '../constants/app_constants.dart';
 import '../providers/user_provider.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/change_password_dialog.dart';
+import '../widgets/app_bar_glass.dart';
 import 'profile_setup_screen.dart';
 import 'login_screen.dart';
 
@@ -159,87 +160,121 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF121212) : Colors.grey[50],
-      appBar: AppBar(
-        title: Text(
-          'My Profile',
-          style: GoogleFonts.spaceGrotesk(
-            fontWeight: FontWeight.w600,
-            fontSize: 20,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        elevation: 0,
-        actions: [
-          IconButton(
-            onPressed: _handleEditProfile,
-            icon: const Icon(Icons.edit_outlined, size: 22),
-            tooltip: 'Edit Profile',
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: _isLoading
-          ? Center(
-              child: CircularProgressIndicator(
-                color: AppConstants.limeGreen,
-                strokeWidth: 3,
-              ),
-            )
-          : Consumer<UserProvider>(
-              builder: (context, userProvider, child) {
-                if (userProvider.user == null) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.person_off_outlined,
-                          size: 64,
-                          color: isDark ? Colors.white38 : Colors.grey[400],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Unable to load profile',
-                          style: GoogleFonts.spaceGrotesk(
-                            fontSize: 16,
-                            color: isDark ? Colors.white70 : Colors.grey[600],
+      body: SafeArea(
+        child: _isLoading
+            ? Column(
+                children: [
+                  AppBarGlass(
+                    mode: AppBarMode.title,
+                    title: 'My Profile',
+                    showProfileIcon: false,
+                    trailingActions: [
+                      IconButton(
+                        onPressed: _handleEditProfile,
+                        icon: const Icon(Icons.edit_outlined, size: 22),
+                        tooltip: 'Edit Profile',
+                      ),
+                    ],
+                  ),
+                  Expanded(
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: AppConstants.limeGreen,
+                        strokeWidth: 3,
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            : Consumer<UserProvider>(
+                builder: (context, userProvider, child) {
+                  if (userProvider.user == null) {
+                    return SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(24, 24, 24, 110),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          AppBarGlass(
+                            mode: AppBarMode.title,
+                            title: 'My Profile',
+                            showProfileIcon: false,
+                            trailingActions: [
+                              IconButton(
+                                onPressed: _handleEditProfile,
+                                icon: const Icon(Icons.edit_outlined, size: 22),
+                                tooltip: 'Edit Profile',
+                              ),
+                            ],
                           ),
+                          const SizedBox(height: 24),
+                          Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.person_off_outlined,
+                                  size: 64,
+                                  color: isDark ? Colors.white38 : Colors.grey[400],
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Unable to load profile',
+                                  style: GoogleFonts.spaceGrotesk(
+                                    fontSize: 16,
+                                    color: isDark ? Colors.white70 : Colors.grey[600],
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+                                ElevatedButton.icon(
+                                  onPressed: _loadProfile,
+                                  icon: const Icon(Icons.refresh, size: 20),
+                                  label: Text(
+                                    'Retry',
+                                    style: GoogleFonts.spaceGrotesk(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppConstants.limeGreen,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 24,
+                                      vertical: 12,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  final user = userProvider.user!;
+                  final age = _calculateAge(user.dateOfBirth);
+
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 110),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AppBarGlass(
+                          mode: AppBarMode.title,
+                          title: 'My Profile',
+                          showProfileIcon: false,
+                          trailingActions: [
+                            IconButton(
+                              onPressed: _handleEditProfile,
+                              icon: const Icon(Icons.edit_outlined, size: 22),
+                              tooltip: 'Edit Profile',
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 24),
-                        ElevatedButton.icon(
-                          onPressed: _loadProfile,
-                          icon: const Icon(Icons.refresh, size: 20),
-                          label: Text(
-                            'Retry',
-                            style: GoogleFonts.spaceGrotesk(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppConstants.limeGreen,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                final user = userProvider.user!;
-                final age = _calculateAge(user.dateOfBirth);
-
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    children: [
                       // Profile Header Card with Gradient Avatar
                       GlassCard.large(
                         child: Column(
@@ -557,12 +592,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 24),
-                    ],
-                  ),
-                );
-              },
-            ),
+                        const SizedBox(height: 24),
+                      ],
+                    ),
+                  );
+                },
+              ),
+      ),
     );
   }
 

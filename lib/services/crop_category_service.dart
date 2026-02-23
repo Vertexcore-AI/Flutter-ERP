@@ -1,48 +1,59 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
 import '../models/crop_category_model.dart';
+import 'api_client.dart';
 
 class CropCategoryService {
+  final _apiClient = ApiClient();
   /// Fetch all crop categories
   Future<Map<String, dynamic>> fetchCategories(String token) async {
     try {
-      final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.apiPrefix}/crop-categories'),
-        headers: ApiConfig.getAuthHeaders(token),
+      final response = await _apiClient.get(
+        '${ApiConfig.baseUrl}${ApiConfig.apiPrefix}/crop-categories',
       );
 
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        final categories = data.map((item) => CropCategory.fromJson(item)).toList();
+      final List<dynamic> data = jsonDecode(response.body);
+      final categories = data.map((item) => CropCategory.fromJson(item)).toList();
 
-        return {'success': true, 'data': categories};
-      } else {
-        return {'success': false, 'error': 'Failed to fetch categories'};
-      }
+      return {'success': true, 'data': categories};
+    } on UnauthorizedException catch (e) {
+      return {'success': false, 'error': e.message, 'unauthorized': true};
+    } on NotFoundException catch (e) {
+      return {'success': false, 'error': e.message};
+    } on RateLimitException catch (e) {
+      return {'success': false, 'error': e.message, 'retryAfter': e.retryAfter};
+    } on NetworkException catch (e) {
+      return {'success': false, 'error': e.message};
+    } on ApiException catch (e) {
+      return {'success': false, 'error': e.message};
     } catch (e) {
-      return {'success': false, 'error': 'Network error: ${e.toString()}'};
+      return {'success': false, 'error': 'Unexpected error: ${e.toString()}'};
     }
   }
 
   /// Fetch crop types by category ID
   Future<Map<String, dynamic>> fetchTypesByCategory(String token, int categoryId) async {
     try {
-      final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.apiPrefix}/crop-categories/$categoryId/types'),
-        headers: ApiConfig.getAuthHeaders(token),
+      final response = await _apiClient.get(
+        '${ApiConfig.baseUrl}${ApiConfig.apiPrefix}/crop-categories/$categoryId/types',
       );
 
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        final types = data.map((item) => CropType.fromJson(item)).toList();
+      final List<dynamic> data = jsonDecode(response.body);
+      final types = data.map((item) => CropType.fromJson(item)).toList();
 
-        return {'success': true, 'data': types};
-      } else {
-        return {'success': false, 'error': 'Failed to fetch crop types'};
-      }
+      return {'success': true, 'data': types};
+    } on UnauthorizedException catch (e) {
+      return {'success': false, 'error': e.message, 'unauthorized': true};
+    } on NotFoundException catch (e) {
+      return {'success': false, 'error': e.message};
+    } on RateLimitException catch (e) {
+      return {'success': false, 'error': e.message, 'retryAfter': e.retryAfter};
+    } on NetworkException catch (e) {
+      return {'success': false, 'error': e.message};
+    } on ApiException catch (e) {
+      return {'success': false, 'error': e.message};
     } catch (e) {
-      return {'success': false, 'error': 'Network error: ${e.toString()}'};
+      return {'success': false, 'error': 'Unexpected error: ${e.toString()}'};
     }
   }
 
@@ -56,18 +67,24 @@ class CropCategoryService {
       final uri = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.apiPrefix}/crop-types/search')
           .replace(queryParameters: queryParams);
 
-      final response = await http.get(uri, headers: ApiConfig.getAuthHeaders(token));
+      final response = await _apiClient.get(uri.toString());
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final types = (data['data'] as List).map((item) => CropType.fromJson(item)).toList();
+      final data = jsonDecode(response.body);
+      final types = (data['data'] as List).map((item) => CropType.fromJson(item)).toList();
 
-        return {'success': true, 'data': types};
-      } else {
-        return {'success': false, 'error': 'Failed to search crop types'};
-      }
+      return {'success': true, 'data': types};
+    } on UnauthorizedException catch (e) {
+      return {'success': false, 'error': e.message, 'unauthorized': true};
+    } on NotFoundException catch (e) {
+      return {'success': false, 'error': e.message};
+    } on RateLimitException catch (e) {
+      return {'success': false, 'error': e.message, 'retryAfter': e.retryAfter};
+    } on NetworkException catch (e) {
+      return {'success': false, 'error': e.message};
+    } on ApiException catch (e) {
+      return {'success': false, 'error': e.message};
     } catch (e) {
-      return {'success': false, 'error': 'Network error: ${e.toString()}'};
+      return {'success': false, 'error': 'Unexpected error: ${e.toString()}'};
     }
   }
 }

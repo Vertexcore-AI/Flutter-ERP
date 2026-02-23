@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import '../widgets/swipeable_nav_bar.dart';
 import 'home_page.dart';
 import 'profile_screen.dart';
-import 'tasks_page.dart';
 import 'farms_page.dart';
 import 'crops_page.dart';
+import 'crop_cycles_page.dart';
+import 'farms_inventory_page.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -17,15 +18,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedIndex = 2; // Start with Home (center position)
   late PageController _pageController;
 
-  // Home is now in the CENTER (3rd position, index 2)
+  // Navigation: Farms, Crops, Home (CENTER), Profile, Cycles, Inventory
   final List<NavigationItem> _navigationItems = [
     NavigationItem(
-      label: 'Tasks',
-      iconPath: 'assets/Icons/Menu_icons/tasks_icon.png',
+      label: 'Farms',
+      iconPath: 'assets/Icons/Menu_icons/farm_mngmt.png',
     ),
     NavigationItem(
-      label: 'Farms',
-      iconPath: 'assets/Icons/Menu_icons/documents_icon.png',
+      label: 'Crops',
+      iconPath: 'assets/Icons/Menu_icons/crops_icon.png',
     ),
     NavigationItem(
       label: 'Home',
@@ -36,17 +37,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
       iconPath: 'assets/Icons/Menu_icons/profile_icon.png',
     ),
     NavigationItem(
-      label: 'Crops',
-      iconPath: 'assets/Icons/Menu_icons/crops_icon.png',
+      label: 'Cycles',
+      iconPath: 'assets/Icons/Menu_icons/crop_cycles_icon.png',
+    ),
+    NavigationItem(
+      label: 'Inventory',
+      iconPath: 'assets/Icons/Menu_icons/inventory-management.png',
     ),
   ];
 
   final List<Widget> _pages = const [
-    TasksPage(),
     FarmsPage(),
-    HomePage(), // Home page is now at index 2 (center)
+    CropsPage(),
+    HomePage(), // Home at index 2 (center)
     ProfileScreen(),
-    CropsPage(), // Replaced AnalyticsPage
+    CropCyclesPage(),
+    FarmsInventoryPage(),
   ];
 
   @override

@@ -1,8 +1,10 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'api_client.dart';
 
 class WeatherService {
   static const String baseUrl = 'https://api.open-meteo.com/v1/forecast';
+  final _apiClient = ApiClient();
 
   /// Fetch current weather for given coordinates
   /// Sri Lanka coordinates: Colombo (6.9271, 79.8612)
@@ -19,34 +21,35 @@ class WeatherService {
     );
 
     try {
-      final response = await http.get(url);
+      final response = await _apiClient.get(url.toString(), requiresAuth: false);
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final currentWeather = data['current_weather'];
-        final daily = data['daily'];
+      final data = json.decode(response.body);
+      final currentWeather = data['current_weather'];
+      final daily = data['daily'];
 
-        return {
-          'success': true,
-          'data': {
-            'temperature': currentWeather['temperature'],
-            'weatherCode': currentWeather['weathercode'],
-            'windSpeed': currentWeather['windspeed'],
-            'windDirection': currentWeather['winddirection'],
-            'time': currentWeather['time'],
-            'highTemp': daily['temperature_2m_max'][0],
-            'lowTemp': daily['temperature_2m_min'][0],
-            'dailyWeatherCode': daily['weathercode'][0],
-          }
-        };
-      } else {
-        return {
-          'success': false,
-          'error': 'Failed to fetch weather data. Status: ${response.statusCode}'
-        };
-      }
+      return {
+        'success': true,
+        'data': {
+          'temperature': currentWeather['temperature'],
+          'weatherCode': currentWeather['weathercode'],
+          'windSpeed': currentWeather['windspeed'],
+          'windDirection': currentWeather['winddirection'],
+          'time': currentWeather['time'],
+          'highTemp': daily['temperature_2m_max'][0],
+          'lowTemp': daily['temperature_2m_min'][0],
+          'dailyWeatherCode': daily['weathercode'][0],
+        }
+      };
+    } on NotFoundException catch (e) {
+      return {'success': false, 'error': e.message};
+    } on RateLimitException catch (e) {
+      return {'success': false, 'error': e.message, 'retryAfter': e.retryAfter};
+    } on NetworkException catch (e) {
+      return {'success': false, 'error': e.message};
+    } on ApiException catch (e) {
+      return {'success': false, 'error': e.message};
     } catch (e) {
-      return {'success': false, 'error': 'Network error: ${e.toString()}'};
+      return {'success': false, 'error': 'Unexpected error: ${e.toString()}'};
     }
   }
 

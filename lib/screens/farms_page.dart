@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/app_constants.dart';
 import '../config/api_config.dart';
+import '../config/design_system.dart';
 import '../providers/farm_provider.dart';
+import '../services/secure_storage_service.dart';
 import '../widgets/farm_card.dart';
+import '../widgets/app_bar_glass.dart';
 import 'farm_form_screen.dart';
 
 class FarmsPage extends StatefulWidget {
@@ -15,10 +17,12 @@ class FarmsPage extends StatefulWidget {
   State<FarmsPage> createState() => _FarmsPageState();
 }
 
-class _FarmsPageState extends State<FarmsPage> with AutomaticKeepAliveClientMixin {
+class _FarmsPageState extends State<FarmsPage>
+    with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
+  final _secureStorage = SecureStorageService();
   String? _authToken;
 
   @override
@@ -28,8 +32,7 @@ class _FarmsPageState extends State<FarmsPage> with AutomaticKeepAliveClientMixi
   }
 
   Future<void> _loadToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    _authToken = prefs.getString('auth_token');
+    _authToken = await _secureStorage.getAuthToken();
     if (_authToken != null && mounted) {
       final farmProvider = Provider.of<FarmProvider>(context, listen: false);
       await farmProvider.fetchFarms(_authToken!);
@@ -43,21 +46,29 @@ class _FarmsPageState extends State<FarmsPage> with AutomaticKeepAliveClientMixi
     }
   }
 
-  void _navigateToForm({int? farmId}) {
+  void _navigateToForm({int? farmId}) async {
     if (_authToken == null) return;
 
-    Navigator.push(
+    await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => FarmFormScreen(
-          authToken: _authToken!,
-          farmId: farmId,
-        ),
+        builder: (context) =>
+            FarmFormScreen(authToken: _authToken!, farmId: farmId),
       ),
     );
+
+    // Refresh the farms list after returning from form
+    if (_authToken != null && mounted) {
+      final farmProvider = Provider.of<FarmProvider>(context, listen: false);
+      await farmProvider.fetchFarms(_authToken!);
+    }
   }
 
-  Future<void> _confirmDelete(BuildContext context, int farmId, String farmName) async {
+  Future<void> _confirmDelete(
+    BuildContext context,
+    int farmId,
+    String farmName,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -93,7 +104,11 @@ class _FarmsPageState extends State<FarmsPage> with AutomaticKeepAliveClientMixi
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(success ? 'Farm deleted successfully' : farmProvider.error ?? 'Failed to delete farm'),
+            content: Text(
+              success
+                  ? 'Farm deleted successfully'
+                  : farmProvider.error ?? 'Failed to delete farm',
+            ),
             backgroundColor: success ? AppConstants.forestGreen : Colors.red,
           ),
         );
@@ -107,113 +122,119 @@ class _FarmsPageState extends State<FarmsPage> with AutomaticKeepAliveClientMixi
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0d0f0a) : const Color(0xFFF5F7F0),
+      backgroundColor: isDark
+          ? const Color(0xFF0d0f0a)
+          : const Color(0xFFF5F7F0),
       body: SafeArea(
-        child: Column(
-          children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Farm Management',
-                          style: GoogleFonts.spaceGrotesk(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black87,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Manage your farm instances',
-                          style: GoogleFonts.spaceGrotesk(
-                            fontSize: 13,
-                            color: isDark ? Colors.white60 : Colors.grey[600],
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+        child: Consumer<FarmProvider>(
+          builder: (context, farmProvider, child) {
+            if (farmProvider.isLoading && farmProvider.farms.isEmpty) {
+              return const Center(
+                child: CircularProgressIndicator(color: AppConstants.limeGreen),
+              );
+            }
+
+            if (farmProvider.farms.isEmpty) {
+              return SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 110),
+                child: Column(
+                  children: [
+                    AppBarGlass(
+                      mode: AppBarMode.title,
+                      title: 'Agriculture Instances',
+                      subtitle: 'Manage your farm instances',
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: () => _navigateToForm(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppConstants.limeGreen,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      minimumSize: Size.zero,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.add, color: Colors.white, size: 18),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Add',
-                          style: GoogleFonts.spaceGrotesk(
-                            fontSize: 13,
+                    const SizedBox(height: 16),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: ElevatedButton.icon(
+                        onPressed: () => _navigateToForm(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppConstants.limeGreen,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          minimumSize: Size.zero,
+                        ),
+                        icon: const Icon(Icons.add, size: 18),
+                        label: Text(
+                          'Add Farm',
+                          style: DesignSystem.text(
+                            fontSize: 15,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Farms Grid
-            Expanded(
-              child: Consumer<FarmProvider>(
-                builder: (context, farmProvider, child) {
-                  if (farmProvider.isLoading && farmProvider.farms.isEmpty) {
-                    return const Center(
-                      child: CircularProgressIndicator(
-                        color: AppConstants.limeGreen,
                       ),
-                    );
-                  }
+                    ),
+                    const SizedBox(height: 24),
+                    _buildEmptyState(isDark),
+                  ],
+                ),
+              );
+            }
 
-                  if (farmProvider.farms.isEmpty) {
-                    return _buildEmptyState(isDark);
-                  }
-
-                  return RefreshIndicator(
-                    onRefresh: _handleRefresh,
-                    color: AppConstants.limeGreen,
-                    child: LayoutBuilder(
+            return RefreshIndicator(
+              onRefresh: _handleRefresh,
+              color: AppConstants.limeGreen,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 110),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppBarGlass(
+                      mode: AppBarMode.title,
+                      title: 'Agriculture Instances',
+                      subtitle: 'Manage your farm instances',
+                    ),
+                    const SizedBox(height: 16),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: ElevatedButton.icon(
+                        onPressed: () => _navigateToForm(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppConstants.limeGreen,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          minimumSize: Size.zero,
+                        ),
+                        icon: const Icon(Icons.add, size: 18),
+                        label: Text(
+                          'Add Farm',
+                          style: DesignSystem.text(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    LayoutBuilder(
                       builder: (context, constraints) {
                         final crossAxisCount = constraints.maxWidth > 1200
                             ? 4
                             : constraints.maxWidth > 900
-                                ? 3
-                                : constraints.maxWidth > 600
-                                    ? 2
-                                    : 1;
+                            ? 3
+                            : constraints.maxWidth > 600
+                            ? 2
+                            : 1;
 
                         return GridView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 24),
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: crossAxisCount,
-                            childAspectRatio: 0.75,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                          ),
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: crossAxisCount,
+                                childAspectRatio: 0.75,
+                                crossAxisSpacing: 16,
+                                mainAxisSpacing: 16,
+                              ),
                           itemCount: farmProvider.farms.length,
                           itemBuilder: (context, index) {
                             final farm = farmProvider.farms[index];
@@ -221,17 +242,18 @@ class _FarmsPageState extends State<FarmsPage> with AutomaticKeepAliveClientMixi
                               farm: farm,
                               baseUrl: ApiConfig.baseUrl,
                               onEdit: () => _navigateToForm(farmId: farm.id),
-                              onDelete: () => _confirmDelete(context, farm.id, farm.name),
+                              onDelete: () =>
+                                  _confirmDelete(context, farm.id, farm.name),
                             );
                           },
                         );
                       },
                     ),
-                  );
-                },
+                  ],
+                ),
               ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );

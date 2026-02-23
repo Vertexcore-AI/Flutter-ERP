@@ -1,60 +1,46 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
 import '../models/crop_model.dart';
+import 'api_client.dart';
 
 class CropService {
+  final _apiClient = ApiClient();
   // Fetch all crops
   Future<Map<String, dynamic>> fetchCrops(String token) async {
     try {
-      final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.apiPrefix}/crops'),
-        headers: ApiConfig.getAuthHeaders(token),
+      final response = await _apiClient.get(
+        '${ApiConfig.baseUrl}${ApiConfig.apiPrefix}/crops',
       );
 
       final data = jsonDecode(response.body);
-      print('CropService.fetchCrops - response status: ${response.statusCode}'); // DEBUG
-      print('CropService.fetchCrops - raw data: $data'); // DEBUG
 
-      if (response.statusCode == 200) {
-        // Backend returns array directly (not wrapped in 'data' key)
-        try {
-          final List<Crop> crops = (data as List)
-              .map((item) {
-                try {
-                  return Crop.fromJson(item);
-                } catch (e) {
-                  print('CropService.fetchCrops - Error parsing crop item: $e'); // DEBUG
-                  print('CropService.fetchCrops - Item data: $item'); // DEBUG
-                  rethrow;
-                }
-              })
-              .toList();
+      try {
+        final List<Crop> crops = (data as List)
+            .map((item) => Crop.fromJson(item))
+            .toList();
 
-          print('CropService.fetchCrops - parsed ${crops.length} crops'); // DEBUG
-          return {
-            'success': true,
-            'data': crops,
-          };
-        } catch (e) {
-          print('CropService.fetchCrops - Error parsing crops list: $e'); // DEBUG
-          return {
-            'success': false,
-            'error': 'Failed to parse crops: ${e.toString()}',
-          };
-        }
-      } else {
+        return {
+          'success': true,
+          'data': crops,
+        };
+      } catch (e) {
         return {
           'success': false,
-          'error': data['message'] ?? 'Failed to fetch crops',
+          'error': 'Failed to parse crops: ${e.toString()}',
         };
       }
+    } on UnauthorizedException catch (e) {
+      return {'success': false, 'error': e.message, 'unauthorized': true};
+    } on NotFoundException catch (e) {
+      return {'success': false, 'error': e.message};
+    } on RateLimitException catch (e) {
+      return {'success': false, 'error': e.message, 'retryAfter': e.retryAfter};
+    } on NetworkException catch (e) {
+      return {'success': false, 'error': e.message};
+    } on ApiException catch (e) {
+      return {'success': false, 'error': e.message};
     } catch (e) {
-      print('CropService.fetchCrops - Network error: $e'); // DEBUG
-      return {
-        'success': false,
-        'error': 'Network error: ${e.toString()}',
-      };
+      return {'success': false, 'error': 'Unexpected error: ${e.toString()}'};
     }
   }
 
@@ -97,32 +83,31 @@ class CropService {
         requestBody['water_usage'] = waterUsage;
       }
 
-      final response = await http.post(
-        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.apiPrefix}/crops'),
-        headers: ApiConfig.getAuthHeaders(token),
-        body: jsonEncode(requestBody),
+      final response = await _apiClient.post(
+        '${ApiConfig.baseUrl}${ApiConfig.apiPrefix}/crops',
+        body: requestBody,
       );
 
       final data = jsonDecode(response.body);
-
-      if (response.statusCode == 201) {
-        // Backend returns the created crop object directly
-        final crop = Crop.fromJson(data);
-        return {
-          'success': true,
-          'data': crop,
-        };
-      } else {
-        return {
-          'success': false,
-          'error': data['message'] ?? data['error'] ?? 'Failed to create crop',
-        };
-      }
-    } catch (e) {
+      final crop = Crop.fromJson(data);
       return {
-        'success': false,
-        'error': 'Network error: ${e.toString()}',
+        'success': true,
+        'data': crop,
       };
+    } on UnauthorizedException catch (e) {
+      return {'success': false, 'error': e.message, 'unauthorized': true};
+    } on ValidationException catch (e) {
+      return {'success': false, 'error': e.message};
+    } on NotFoundException catch (e) {
+      return {'success': false, 'error': e.message};
+    } on RateLimitException catch (e) {
+      return {'success': false, 'error': e.message, 'retryAfter': e.retryAfter};
+    } on NetworkException catch (e) {
+      return {'success': false, 'error': e.message};
+    } on ApiException catch (e) {
+      return {'success': false, 'error': e.message};
+    } catch (e) {
+      return {'success': false, 'error': 'Unexpected error: ${e.toString()}'};
     }
   }
 
@@ -170,90 +155,86 @@ class CropService {
         requestBody['total_harvest'] = totalHarvest;
       }
 
-      final response = await http.put(
-        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.apiPrefix}/crops/$cropId'),
-        headers: ApiConfig.getAuthHeaders(token),
-        body: jsonEncode(requestBody),
+      final response = await _apiClient.put(
+        '${ApiConfig.baseUrl}${ApiConfig.apiPrefix}/crops/$cropId',
+        body: requestBody,
       );
 
       final data = jsonDecode(response.body);
-
-      if (response.statusCode == 200) {
-        // Backend returns the updated crop object
-        final crop = Crop.fromJson(data);
-        return {
-          'success': true,
-          'data': crop,
-        };
-      } else {
-        return {
-          'success': false,
-          'error': data['message'] ?? data['error'] ?? 'Failed to update crop',
-        };
-      }
-    } catch (e) {
+      // Backend returns the updated crop object
+      final crop = Crop.fromJson(data);
       return {
-        'success': false,
-        'error': 'Network error: ${e.toString()}',
+        'success': true,
+        'data': crop,
       };
+    } on UnauthorizedException catch (e) {
+      return {'success': false, 'error': e.message, 'unauthorized': true};
+    } on ValidationException catch (e) {
+      return {'success': false, 'error': e.message};
+    } on NotFoundException catch (e) {
+      return {'success': false, 'error': e.message};
+    } on RateLimitException catch (e) {
+      return {'success': false, 'error': e.message, 'retryAfter': e.retryAfter};
+    } on NetworkException catch (e) {
+      return {'success': false, 'error': e.message};
+    } on ApiException catch (e) {
+      return {'success': false, 'error': e.message};
+    } catch (e) {
+      return {'success': false, 'error': 'Unexpected error: ${e.toString()}'};
     }
   }
 
   // Delete crop
   Future<Map<String, dynamic>> deleteCrop(String token, int cropId) async {
     try {
-      final response = await http.delete(
-        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.apiPrefix}/crops/$cropId'),
-        headers: ApiConfig.getAuthHeaders(token),
+      await _apiClient.delete(
+        '${ApiConfig.baseUrl}${ApiConfig.apiPrefix}/crops/$cropId',
       );
 
-      if (response.statusCode == 200) {
-        return {
-          'success': true,
-          'message': 'Crop deleted successfully',
-        };
-      } else {
-        final data = jsonDecode(response.body);
-        return {
-          'success': false,
-          'error': data['message'] ?? 'Failed to delete crop',
-        };
-      }
-    } catch (e) {
       return {
-        'success': false,
-        'error': 'Network error: ${e.toString()}',
+        'success': true,
+        'message': 'Crop deleted successfully',
       };
+    } on UnauthorizedException catch (e) {
+      return {'success': false, 'error': e.message, 'unauthorized': true};
+    } on NotFoundException catch (e) {
+      return {'success': false, 'error': e.message};
+    } on RateLimitException catch (e) {
+      return {'success': false, 'error': e.message, 'retryAfter': e.retryAfter};
+    } on NetworkException catch (e) {
+      return {'success': false, 'error': e.message};
+    } on ApiException catch (e) {
+      return {'success': false, 'error': e.message};
+    } catch (e) {
+      return {'success': false, 'error': 'Unexpected error: ${e.toString()}'};
     }
   }
 
   // Get single crop by ID
   Future<Map<String, dynamic>> getCrop(String token, int cropId) async {
     try {
-      final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.apiPrefix}/crops/$cropId'),
-        headers: ApiConfig.getAuthHeaders(token),
+      final response = await _apiClient.get(
+        '${ApiConfig.baseUrl}${ApiConfig.apiPrefix}/crops/$cropId',
       );
 
       final data = jsonDecode(response.body);
-
-      if (response.statusCode == 200) {
-        final crop = Crop.fromJson(data);
-        return {
-          'success': true,
-          'data': crop,
-        };
-      } else {
-        return {
-          'success': false,
-          'error': data['message'] ?? 'Failed to fetch crop',
-        };
-      }
-    } catch (e) {
+      final crop = Crop.fromJson(data);
       return {
-        'success': false,
-        'error': 'Network error: ${e.toString()}',
+        'success': true,
+        'data': crop,
       };
+    } on UnauthorizedException catch (e) {
+      return {'success': false, 'error': e.message, 'unauthorized': true};
+    } on NotFoundException catch (e) {
+      return {'success': false, 'error': e.message};
+    } on RateLimitException catch (e) {
+      return {'success': false, 'error': e.message, 'retryAfter': e.retryAfter};
+    } on NetworkException catch (e) {
+      return {'success': false, 'error': e.message};
+    } on ApiException catch (e) {
+      return {'success': false, 'error': e.message};
+    } catch (e) {
+      return {'success': false, 'error': 'Unexpected error: ${e.toString()}'};
     }
   }
 }

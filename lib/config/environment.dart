@@ -18,9 +18,9 @@ class EnvironmentConfig {
   static String get baseUrl {
     switch (_environment) {
       case Environment.local:
-        return 'http://localhost:8000';
+        return 'https://vertexcoreai.com/GOVI_POTHA/Back-end/public';
       case Environment.production:
-        return 'https://vertexcoreai.com/govi_potha';
+        return 'https://vertexcoreai.com/GOVI_POTHA/Back-end/public';
     }
   }
 

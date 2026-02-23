@@ -6,6 +6,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/app_constants.dart';
 import '../providers/user_provider.dart';
 import '../services/auth_service.dart';
+import '../services/secure_storage_service.dart';
+import '../config/recaptcha_config.dart';
+import '../widgets/recaptcha_widget.dart';
 import 'signup_screen.dart';
 import 'dashboard_screen.dart';
 import 'profile_setup_screen.dart';
@@ -22,7 +25,11 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
   bool _isLoading = false;
+  bool _rememberDevice = false;
+  bool _showRecaptcha = false;
+  String? _recaptchaToken;
   final _authService = AuthService();
+  final _secureStorage = SecureStorageService();
 
   @override
   void dispose() {
@@ -45,24 +52,41 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
+      // First attempt - with optional reCAPTCHA token
       final result = await _authService.login(
         username: _usernameController.text.trim(),
         password: _passwordController.text,
+        recaptchaToken: _recaptchaToken,
+        rememberMe: _rememberDevice,
       );
 
       if (!mounted) return;
 
+      // Check if reCAPTCHA is required
+      if (result['recaptcha_required'] == true && !_showRecaptcha) {
+        setState(() {
+          _showRecaptcha = true; // Show reCAPTCHA widget
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Additional verification required'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
       if (result['success']) {
-        // Store token in shared preferences
+        // Store username in shared preferences (token is in secure storage)
         final prefs = await SharedPreferences.getInstance();
-        final token = result['data']['access_token'];
-        await prefs.setString('auth_token', token);
         await prefs.setString('username', _usernameController.text.trim());
 
         // Fetch user profile to check if profile is completed
         if (!mounted) return;
         final userProvider = Provider.of<UserProvider>(context, listen: false);
-        final profileFetched = await userProvider.fetchProfile(token);
+        final token = await _secureStorage.getAuthToken();
+        final profileFetched = await userProvider.fetchProfile(token!);
 
         if (!mounted) return;
 
@@ -338,7 +362,49 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 16),
+
+                // Remember Device Checkbox
+                CheckboxListTile(
+                  value: _rememberDevice,
+                  onChanged: (value) {
+                    setState(() => _rememberDevice = value ?? false);
+                  },
+                  title: Text(
+                    'Remember this device for 30 days',
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 13,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                  controlAffinity: ListTileControlAffinity.leading,
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                ),
+
+                // reCAPTCHA Widget (conditional)
+                if (_showRecaptcha) ...[
+                  const SizedBox(height: 16),
+                  RecaptchaWidget(
+                    siteKey: RecaptchaConfig.siteKey,
+                    onVerified: (token) {
+                      setState(() {
+                        _recaptchaToken = token;
+                        _showRecaptcha = false;
+                      });
+                      _handleSignIn(); // Retry login with token
+                    },
+                    onError: (error) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('reCAPTCHA failed: $error'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    },
+                  ),
+                ],
+                const SizedBox(height: 16),
 
                 // Sign In Button
                 SizedBox(

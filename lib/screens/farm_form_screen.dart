@@ -85,7 +85,15 @@ class _FarmFormScreenState extends State<FarmFormScreen> {
   }
 
   Future<void> _handleSubmit() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill all required fields'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
 
     setState(() => _isLoading = true);
 
@@ -135,6 +143,7 @@ class _FarmFormScreenState extends State<FarmFormScreen> {
               ? 'Farm created successfully'
               : 'Farm updated successfully'),
             backgroundColor: AppConstants.forestGreen,
+            duration: const Duration(seconds: 2),
           ),
         );
         Navigator.pop(context);
@@ -143,6 +152,7 @@ class _FarmFormScreenState extends State<FarmFormScreen> {
           SnackBar(
             content: Text(farmProvider.error ?? 'Failed to save farm'),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
           ),
         );
       }

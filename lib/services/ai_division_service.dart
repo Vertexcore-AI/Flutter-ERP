@@ -1,9 +1,10 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
 import '../models/ai_division_model.dart';
+import 'api_client.dart';
 
 class AIDivisionService {
+  final _apiClient = ApiClient();
   // Search AI divisions
   Future<Map<String, dynamic>> search({
     String? query,
@@ -23,89 +24,79 @@ class AIDivisionService {
         '${ApiConfig.baseUrl}${ApiConfig.apiPrefix}/ai-divisions/search',
       ).replace(queryParameters: queryParams);
 
-      final response = await http.get(uri, headers: ApiConfig.headers);
+      final response = await _apiClient.get(uri.toString(), requiresAuth: false);
       final data = jsonDecode(response.body);
 
-      if (response.statusCode == 200) {
-        final List<AIDivision> divisions = (data['data'] as List)
-            .map((item) => AIDivision.fromJson(item))
-            .toList();
+      final List<AIDivision> divisions = (data['data'] as List)
+          .map((item) => AIDivision.fromJson(item))
+          .toList();
 
-        return {
-          'success': true,
-          'data': divisions,
-        };
-      } else {
-        return {
-          'success': false,
-          'error': 'Failed to fetch divisions',
-        };
-      }
-    } catch (e) {
       return {
-        'success': false,
-        'error': 'Network error: ${e.toString()}',
+        'success': true,
+        'data': divisions,
       };
+    } on NotFoundException catch (e) {
+      return {'success': false, 'error': e.message};
+    } on RateLimitException catch (e) {
+      return {'success': false, 'error': e.message, 'retryAfter': e.retryAfter};
+    } on NetworkException catch (e) {
+      return {'success': false, 'error': e.message};
+    } on ApiException catch (e) {
+      return {'success': false, 'error': e.message};
+    } catch (e) {
+      return {'success': false, 'error': 'Unexpected error: ${e.toString()}'};
     }
   }
 
   // Get all districts
   Future<Map<String, dynamic>> getDistricts() async {
     try {
-      final response = await http.get(
-        Uri.parse(
-            '${ApiConfig.baseUrl}${ApiConfig.apiPrefix}/ai-divisions/districts'),
-        headers: ApiConfig.headers,
+      final response = await _apiClient.get(
+        '${ApiConfig.baseUrl}${ApiConfig.apiPrefix}/ai-divisions/districts',
+        requiresAuth: false,
       );
 
       final data = jsonDecode(response.body);
-
-      if (response.statusCode == 200) {
-        return {
-          'success': true,
-          'data': List<String>.from(data['data']),
-        };
-      } else {
-        return {
-          'success': false,
-          'error': 'Failed to fetch districts',
-        };
-      }
-    } catch (e) {
       return {
-        'success': false,
-        'error': 'Network error: ${e.toString()}',
+        'success': true,
+        'data': List<String>.from(data['data']),
       };
+    } on NotFoundException catch (e) {
+      return {'success': false, 'error': e.message};
+    } on RateLimitException catch (e) {
+      return {'success': false, 'error': e.message, 'retryAfter': e.retryAfter};
+    } on NetworkException catch (e) {
+      return {'success': false, 'error': e.message};
+    } on ApiException catch (e) {
+      return {'success': false, 'error': e.message};
+    } catch (e) {
+      return {'success': false, 'error': 'Unexpected error: ${e.toString()}'};
     }
   }
 
   // Get all provinces
   Future<Map<String, dynamic>> getProvinces() async {
     try {
-      final response = await http.get(
-        Uri.parse(
-            '${ApiConfig.baseUrl}${ApiConfig.apiPrefix}/ai-divisions/provinces'),
-        headers: ApiConfig.headers,
+      final response = await _apiClient.get(
+        '${ApiConfig.baseUrl}${ApiConfig.apiPrefix}/ai-divisions/provinces',
+        requiresAuth: false,
       );
 
       final data = jsonDecode(response.body);
-
-      if (response.statusCode == 200) {
-        return {
-          'success': true,
-          'data': List<String>.from(data['data']),
-        };
-      } else {
-        return {
-          'success': false,
-          'error': 'Failed to fetch provinces',
-        };
-      }
-    } catch (e) {
       return {
-        'success': false,
-        'error': 'Network error: ${e.toString()}',
+        'success': true,
+        'data': List<String>.from(data['data']),
       };
+    } on NotFoundException catch (e) {
+      return {'success': false, 'error': e.message};
+    } on RateLimitException catch (e) {
+      return {'success': false, 'error': e.message, 'retryAfter': e.retryAfter};
+    } on NetworkException catch (e) {
+      return {'success': false, 'error': e.message};
+    } on ApiException catch (e) {
+      return {'success': false, 'error': e.message};
+    } catch (e) {
+      return {'success': false, 'error': 'Unexpected error: ${e.toString()}'};
     }
   }
 }
