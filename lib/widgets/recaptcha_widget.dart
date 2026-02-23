@@ -1,9 +1,5 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-
-// Import web implementation only
-import 'recaptcha_widget_web.dart' if (dart.library.html) 'recaptcha_widget_web.dart';
 
 /// Platform-aware reCAPTCHA widget
 /// Uses web-specific implementation for Flutter web, WebView for mobile
@@ -21,21 +17,13 @@ class RecaptchaWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (kIsWeb) {
-      // Use web-specific implementation
-      return RecaptchaWidgetWeb(
-        siteKey: siteKey,
-        onVerified: onVerified,
-        onError: onError,
-      );
-    } else {
-      // Use mobile WebView implementation
-      return _RecaptchaWidgetMobile(
-        siteKey: siteKey,
-        onVerified: onVerified,
-        onError: onError,
-      );
-    }
+    // For mobile platforms, always use WebView implementation
+    // Web implementation is handled separately via recaptcha_widget_web.dart
+    return _RecaptchaWidgetMobile(
+      siteKey: siteKey,
+      onVerified: onVerified,
+      onError: onError,
+    );
   }
 }
 
