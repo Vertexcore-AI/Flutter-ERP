@@ -72,24 +72,38 @@ class _PhotonLocationFieldState extends State<PhotonLocationField> {
     setState(() => _isLoading = true);
 
     try {
-      // Photon API - Free OpenStreetMap geocoding
-      // Restrict to Sri Lanka with bbox parameter
-      // Sri Lanka bounding box: [lon_min, lat_min, lon_max, lat_max]
+      // Nominatim API - Free OpenStreetMap geocoding (faster than Photon)
+      // Restrict to Sri Lanka only for faster results
       final url = Uri.parse(
-        'https://photon.komoot.io/api/?q=${Uri.encodeComponent(query)}'
-        '&lon=80.7718&lat=7.8731' // Center on Sri Lanka
+        'https://nominatim.openstreetmap.org/search?'
+        'q=${Uri.encodeComponent(query)}'
+        '&countrycodes=lk' // Only Sri Lanka (ISO 3166-1 alpha-2 code)
+        '&format=json'
         '&limit=5'
+        '&addressdetails=1' // Include address breakdown
       );
 
-      final response = await http.get(url);
+      // Add 5-second timeout to prevent hanging
+      final response = await http.get(
+        url,
+        headers: {
+          'User-Agent': 'GreenlandERP/1.0', // Nominatim requires User-Agent
+        },
+      ).timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          throw Exception('Search timeout - please try again');
+        },
+      );
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final features = data['features'] as List;
+        final data = jsonDecode(response.body) as List;
+
+        if (!mounted) return;
 
         setState(() {
-          _suggestions = features
-              .map((feature) => PhotonPlace.fromJson(feature))
+          _suggestions = data
+              .map((item) => PhotonPlace.fromNominatimJson(item as Map<String, dynamic>))
               .toList();
           _isLoading = false;
         });
@@ -100,13 +114,15 @@ class _PhotonLocationFieldState extends State<PhotonLocationField> {
           _removeOverlay();
         }
       } else {
+        if (!mounted) return;
         setState(() {
           _suggestions = [];
           _isLoading = false;
         });
       }
     } catch (e) {
-      print('Photon search error: $e');
+      print('Nominatim search error: $e');
+      if (!mounted) return;
       setState(() {
         _suggestions = [];
         _isLoading = false;
@@ -325,6 +341,44 @@ class PhotonPlace {
       country: properties['country'] as String?,
       city: properties['city'] as String?,
       state: properties['state'] as String?,
+    );
+  }
+
+  // Factory for Nominatim API response
+  factory PhotonPlace.fromNominatimJson(Map<String, dynamic> json) {
+    // Nominatim returns display_name as the full address
+    String displayName = json['display_name'] as String? ?? 'Unknown Location';
+
+    // Get address components if available
+    final address = json['address'] as Map<String, dynamic>?;
+
+    // Build a cleaner display name from address components
+    if (address != null) {
+      final parts = <String>[];
+
+      // Add primary location name
+      if (address['road'] != null) parts.add(address['road']);
+      if (address['suburb'] != null) parts.add(address['suburb']);
+      if (address['city'] != null) {
+        parts.add(address['city']);
+      } else if (address['town'] != null) {
+        parts.add(address['town']);
+      } else if (address['village'] != null) {
+        parts.add(address['village']);
+      }
+
+      if (parts.isNotEmpty) {
+        displayName = parts.join(', ');
+      }
+    }
+
+    return PhotonPlace(
+      name: displayName,
+      latitude: double.parse(json['lat'].toString()),
+      longitude: double.parse(json['lon'].toString()),
+      country: address?['country'] as String?,
+      city: address?['city'] as String? ?? address?['town'] as String?,
+      state: address?['state'] as String?,
     );
   }
 }

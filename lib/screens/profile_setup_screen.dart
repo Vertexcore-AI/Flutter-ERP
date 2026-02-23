@@ -2,14 +2,15 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/app_constants.dart';
 import '../models/ai_division_model.dart';
 import '../providers/user_provider.dart';
+import '../services/secure_storage_service.dart';
 import '../widgets/ai_division_search_field.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/glass_date_picker_field.dart';
 import '../widgets/app_bar_glass.dart';
+import '../widgets/photon_location_field.dart';
 import 'dashboard_screen.dart';
 
 class ProfileSetupScreen extends StatefulWidget {
@@ -28,6 +29,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   AIDivision? _selectedAIDivision;
   bool _isSlGapCertified = false;
   bool _isLoading = false;
+  double? _latitude;
+  double? _longitude;
 
   @override
   void dispose() {
@@ -113,9 +116,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Get token from SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
+      // Get token from SecureStorage
+      final secureStorage = SecureStorageService();
+      final token = await secureStorage.getAuthToken();
 
       if (token == null) {
         if (!mounted) return;
@@ -187,11 +190,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            AppBarGlass(
-              mode: AppBarMode.title,
-              title: 'Complete Your Profile',
-              showProfileIcon: false,
-            ),
+            // AppBarGlass(
+            //   mode: AppBarMode.title,
+            //   title: 'Complete Your Profile',
+            //   showProfileIcon: false,
+            // ),
             Expanded(
               child: Stack(
                 children: [
@@ -417,7 +420,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                         ],
                         const SizedBox(height: 20),
 
-                        // Location Field
+                        // Location Field with Photon Search
                         Text(
                           'Location (Optional)',
                           style: GoogleFonts.spaceGrotesk(
@@ -427,11 +430,14 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        _buildTextField(
+                        PhotonLocationField(
                           controller: _locationController,
-                          icon: Icons.place_outlined,
-                          hintText: 'Enter your farm location',
-                          maxLines: 2,
+                          onPlaceSelected: (latitude, longitude, address) {
+                            setState(() {
+                              _latitude = latitude;
+                              _longitude = longitude;
+                            });
+                          },
                         ),
                       ],
                     ),
