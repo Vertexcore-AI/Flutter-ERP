@@ -107,18 +107,18 @@ class OnboardingPage extends StatelessWidget {
               width: 1,
             ),
           ),
-          child: Image.asset(
-            AppConstants.logoPath,
-            width: 48,
-            height: 48,
-            errorBuilder: (context, error, stackTrace) {
-              return const Icon(
-                Icons.eco,
-                color: Colors.white,
-                size: 32,
-              );
-            },
-          ),
+          // child: Image.asset(
+          //   AppConstants.logoPath,
+          //   width: 48,
+          //   height: 48,
+          //   errorBuilder: (context, error, stackTrace) {
+          //     return const Icon(
+          //       Icons.eco,
+          //       color: Colors.white,
+          //       size: 32,
+          //     );
+          //   },
+          // ),
         ),
       ),
     );

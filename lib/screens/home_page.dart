@@ -164,6 +164,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
             mode: AppBarMode.branding,
             brandingText: 'Greenland',
             brandingIcon: Icons.eco,
+            showProfileIcon: false, // Profile accessible via bottom nav
           ),
           const SizedBox(height: 24),
           // Dashboard Layouts
