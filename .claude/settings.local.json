@@ -160,7 +160,8 @@
       "Bash(flutter logs:*)",
       "Bash(flutter build:*)",
       "Bash(flutter pub upgrade:*)",
-      "Bash(flutter doctor:*)"
+      "Bash(flutter doctor:*)",
+      "Read(//e/Herd/**)"
     ]
   },
   "enableAllProjectMcpServers": true,

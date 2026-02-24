@@ -7,6 +7,7 @@ import 'crops_page.dart';
 import 'crop_cycles_page.dart';
 import 'farms_inventory_page.dart';
 import 'tasks_page.dart';
+import 'buyers_page.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -19,7 +20,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedIndex = 2; // Start with Home (center position)
   late PageController _pageController;
 
-  // Navigation: Farms, Crops, Home (CENTER), Profile, Tasks, Cycles, Inventory
+  // Navigation: Farms, Crops, Home (CENTER), Profile, Tasks, Buyers, Cycles, Inventory
   final List<NavigationItem> _navigationItems = [
     NavigationItem(
       label: 'Farms',
@@ -42,6 +43,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       iconPath: 'assets/Icons/Menu_icons/task.png',
     ),
     NavigationItem(
+      label: 'Buyers',
+      iconPath: 'assets/Icons/Menu_icons/buyers.png',
+    ),
+    NavigationItem(
       label: 'Cycles',
       iconPath: 'assets/Icons/Menu_icons/crop_cycles_icon.png',
     ),
@@ -57,6 +62,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     HomePage(), // Home at index 2 (center)
     ProfileScreen(),
     TasksPage(),
+    BuyersPage(), // Buyers at index 5
     CropCyclesPage(),
     FarmsInventoryPage(),
   ];

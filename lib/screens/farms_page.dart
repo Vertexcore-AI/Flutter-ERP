@@ -122,9 +122,6 @@ class _FarmsPageState extends State<FarmsPage>
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark
-          ? const Color(0xFF0d0f0a)
-          : const Color(0xFFF5F7F0),
       body: SafeArea(
         child: Consumer<FarmProvider>(
           builder: (context, farmProvider, child) {

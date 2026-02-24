@@ -69,7 +69,7 @@ class _SwipeableNavBarState extends State<SwipeableNavBar> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return isDark
         ? const Color(0xFF1E1E1E).withValues(alpha: 0.95)  // Dark gray/black in dark mode
-        : Colors.white.withValues(alpha: 0.9);  // White in light mode
+        : const Color(0xFFE8EBD8).withValues(alpha: 0.95);  // Darker sage tint in light mode
   }
 
   @override
@@ -94,7 +94,8 @@ class _SwipeableNavBarState extends State<SwipeableNavBar> {
       padding: EdgeInsets.only(
         left: isMobile ? 16 : 24,
         right: isMobile ? 16 : 24,
-        bottom: 16,
+        bottom: 20,
+        top: 12,
       ),
       child: Center(
         child: SizedBox(
@@ -206,7 +207,7 @@ class _SwipeableNavBarState extends State<SwipeableNavBar> {
                       colorFilter: ColorFilter.mode(
                         isDark
                             ? Colors.white.withValues(alpha: 0.5)
-                            : AppConstants.darkGreen.withValues(alpha: 0.4),
+                            : AppConstants.darkGreen.withValues(alpha: 0.6),
                         BlendMode.srcIn,
                       ),
                       child: Image.asset(

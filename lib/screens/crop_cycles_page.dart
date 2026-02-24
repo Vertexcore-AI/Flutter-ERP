@@ -82,9 +82,6 @@ class _CropCyclesPageState extends State<CropCyclesPage>
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark
-          ? DesignSystem.darkScaffoldBackground
-          : DesignSystem.lightScaffoldBackground,
       body: SafeArea(
         child: Consumer<CropCycleProvider>(
           builder: (context, provider, child) {

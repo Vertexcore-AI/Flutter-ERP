@@ -432,10 +432,10 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                         const SizedBox(height: 8),
                         PhotonLocationField(
                           controller: _locationController,
-                          onPlaceSelected: (latitude, longitude, address) {
+                          onPlaceSelected: (place) {
                             setState(() {
-                              _latitude = latitude;
-                              _longitude = longitude;
+                              _latitude = place.latitude;
+                              _longitude = place.longitude;
                             });
                           },
                         ),

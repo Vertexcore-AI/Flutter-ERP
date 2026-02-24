@@ -30,7 +30,7 @@ class ThemeConfig {
         onError: Colors.white,
       ),
 
-      scaffoldBackgroundColor: AppConstants.lightSage.withValues(alpha: 0.15),
+      scaffoldBackgroundColor: const Color.fromARGB(255, 209, 212, 186).withValues(alpha: 0.35),
 
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.white.withValues(alpha: 0.85),

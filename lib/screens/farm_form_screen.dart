@@ -323,11 +323,11 @@ class _FarmFormScreenState extends State<FarmFormScreen> {
                           PhotonLocationField(
                             controller: _locationController,
                             initialValue: _existingFarm?.location,
-                            onPlaceSelected: (lat, lng, address) {
+                            onPlaceSelected: (place) {
                               setState(() {
-                                _latitude = lat;
-                                _longitude = lng;
-                                _locationController.text = address;
+                                _latitude = place.latitude;
+                                _longitude = place.longitude;
+                                _locationController.text = place.name;
                               });
                             },
                           ),

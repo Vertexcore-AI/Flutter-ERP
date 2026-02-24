@@ -438,15 +438,18 @@ class _TaskFormWidgetState extends State<TaskFormWidget> {
                   color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  _dueDate != null
-                      ? DateFormat('MMM dd, yyyy').format(_dueDate!)
-                      : 'Select date',
-                  style: DesignSystem.text(
-                    fontSize: 15,
-                    color: _dueDate != null
-                        ? (isDark ? AppConstants.lightSage : AppConstants.darkGreen)
-                        : (isDark ? Colors.grey.shade600 : Colors.grey.shade500),
+                Expanded(
+                  child: Text(
+                    _dueDate != null
+                        ? DateFormat('MMM dd, yyyy').format(_dueDate!)
+                        : 'Select date',
+                    style: DesignSystem.text(
+                      fontSize: 15,
+                      color: _dueDate != null
+                          ? (isDark ? AppConstants.lightSage : AppConstants.darkGreen)
+                          : (isDark ? Colors.grey.shade600 : Colors.grey.shade500),
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],

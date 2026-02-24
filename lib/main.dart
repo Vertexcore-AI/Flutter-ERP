@@ -13,6 +13,7 @@ import 'providers/crop_category_provider.dart';
 import 'providers/crop_cycle_provider.dart';
 import 'providers/inventory_provider.dart';
 import 'providers/task_provider.dart';
+import 'providers/buyer_provider.dart';
 import 'config/theme_config.dart';
 import 'services/deep_link_service.dart';
 import 'services/api_client.dart';
@@ -116,6 +117,7 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider<CropCycleProvider>(create: (_) => CropCycleProvider()),
         ChangeNotifierProvider<InventoryProvider>(create: (_) => InventoryProvider()),
         ChangeNotifierProvider<TaskProvider>(create: (_) => TaskProvider()),
+        ChangeNotifierProvider<BuyerProvider>(create: (_) => BuyerProvider()),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, theme, _) {

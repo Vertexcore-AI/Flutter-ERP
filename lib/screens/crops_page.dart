@@ -138,9 +138,6 @@ class _CropsPageState extends State<CropsPage> with AutomaticKeepAliveClientMixi
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark
-          ? DesignSystem.darkScaffoldBackground
-          : DesignSystem.lightScaffoldBackground,
       body: SafeArea(
         child: Consumer<CropProvider>(
           builder: (context, cropProvider, child) {

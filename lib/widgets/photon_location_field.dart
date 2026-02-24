@@ -6,7 +6,7 @@ import 'dart:async';
 
 class PhotonLocationField extends StatefulWidget {
   final TextEditingController controller;
-  final Function(double latitude, double longitude, String address) onPlaceSelected;
+  final Function(PhotonPlace place) onPlaceSelected;
   final String? initialValue;
 
   const PhotonLocationField({
@@ -183,7 +183,7 @@ class _PhotonLocationFieldState extends State<PhotonLocationField> {
           return InkWell(
             onTap: () {
               widget.controller.text = place.name;
-              widget.onPlaceSelected(place.latitude, place.longitude, place.name);
+              widget.onPlaceSelected(place);
               _removeOverlay();
               _focusNode.unfocus();
             },

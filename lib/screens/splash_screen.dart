@@ -45,19 +45,20 @@ class _SplashScreenState extends State<SplashScreen> {
 
       if (token == null) {
         // First-time user or logged out
-        await _ensureMinimumDelay(startTime, 10000);
+        await _ensureMinimumDelay(startTime, 2500);
         _navigateToOnboarding();
         return;
       }
 
       // 2. Validate token with backend (10 second timeout)
-      final result = await _authService.getCurrentUser()
-          .timeout(const Duration(seconds: 10));
+      final result = await _authService.getCurrentUser().timeout(
+        const Duration(seconds: 10),
+      );
 
       if (!result['success']) {
         // Token invalid/expired - clear storage
         await _secureStorage.clearAll();
-        await _ensureMinimumDelay(startTime, 10000);
+        await _ensureMinimumDelay(startTime, 2500);
         _navigateToLogin();
         return;
       }
@@ -69,13 +70,13 @@ class _SplashScreenState extends State<SplashScreen> {
 
       if (!profileFetched || userProvider.user == null) {
         // Profile fetch failed - go to login
-        await _ensureMinimumDelay(startTime, 10000);
+        await _ensureMinimumDelay(startTime, 2500);
         if (mounted) _navigateToLogin();
         return;
       }
 
       // 4. Route based on profile completion status
-      await _ensureMinimumDelay(startTime, 10000);
+      await _ensureMinimumDelay(startTime, 2500);
       if (!mounted) return;
 
       if (userProvider.user!.profileCompleted) {
@@ -87,14 +88,16 @@ class _SplashScreenState extends State<SplashScreen> {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMessage = 'Connection timeout. Please check your internet connection.';
+          _errorMessage =
+              'Connection timeout. Please check your internet connection.';
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMessage = 'Unable to connect. Please check your internet connection.';
+          _errorMessage =
+              'Unable to connect. Please check your internet connection.';
         });
       }
     }
@@ -144,7 +147,7 @@ class _SplashScreenState extends State<SplashScreen> {
         height: double.infinity,
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('images/Splash_2.png'),
+            image: AssetImage('assets/images/Splash_2.png'),
             fit: BoxFit.cover,
           ),
         ),
@@ -159,10 +162,7 @@ class _SplashScreenState extends State<SplashScreen> {
     return Column(
       children: [
         const Spacer(flex: 7), // 70% down
-        const CircularProgressIndicator(
-          color: Colors.white,
-          strokeWidth: 4,
-        ),
+        const CircularProgressIndicator(color: Colors.white, strokeWidth: 4),
         const Spacer(flex: 3), // 30% remaining
       ],
     );
@@ -188,10 +188,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 Text(
                   _errorMessage ?? 'An error occurred',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
-                  ),
+                  style: const TextStyle(fontSize: 16, color: Colors.white),
                 ),
                 const SizedBox(height: 24),
 
@@ -230,10 +227,7 @@ class _SplashScreenState extends State<SplashScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
-                      side: const BorderSide(
-                        color: Colors.white,
-                        width: 1.5,
-                      ),
+                      side: const BorderSide(color: Colors.white, width: 1.5),
                     ),
                     child: const Text(
                       'Login Again',

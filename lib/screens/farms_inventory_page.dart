@@ -423,9 +423,6 @@ class _FarmsInventoryPageState extends State<FarmsInventoryPage>
     super.build(context);
     // Build methods will be added in next part
     return Scaffold(
-      backgroundColor: Theme.of(context).brightness == Brightness.dark
-          ? const Color(0xFF0d0f0a)
-          : const Color(0xFFF5F7F0),
       body: SafeArea(
         child: Consumer<InventoryProvider>(
           builder: (context, inventoryProvider, child) {

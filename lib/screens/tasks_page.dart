@@ -221,69 +221,61 @@ class _TasksPageState extends State<TasksPage>
     final filteredTasks = _getFilteredTasks(taskProvider);
 
     return Scaffold(
-      backgroundColor: isDark
-          ? DesignSystem.darkScaffoldBackground
-          : DesignSystem.lightScaffoldBackground,
       body: SafeArea(
-        child: Column(
-          children: [
-            // App Bar
-            AppBarGlass(
-              mode: AppBarMode.title,
-              title: 'Task Management',
-              subtitle: 'Organize your farming activities',
-            ),
-
-            // Content
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: _handleRefresh,
-                color: AppConstants.limeGreen,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 110),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Summary Cards
-                      _buildSummaryCards(taskProvider),
-
-                      const SizedBox(height: 24),
-
-                      // Filter Tabs
-                      _buildFilterTabs(),
-
-                      const SizedBox(height: 24),
-
-                      // New Task Button
-                      if (!_showForm)
-                        _buildNewTaskButton()
-                      else
-                        const SizedBox.shrink(),
-
-                      // Task Form (Conditional)
-                      if (_showForm) ...[
-                        const SizedBox(height: 16),
-                        TaskFormWidget(
-                          task: _editingTask,
-                          onSubmit: _handleFormSubmit,
-                          onCancel: _hideForm,
-                        ),
-                        const SizedBox(height: 24),
-                      ],
-
-                      // Task List
-                      if (taskProvider.isLoading)
-                        _buildLoadingState()
-                      else if (filteredTasks.isEmpty)
-                        _buildEmptyState()
-                      else
-                        _buildTaskList(filteredTasks),
-                    ],
-                  ),
+        child: RefreshIndicator(
+          onRefresh: _handleRefresh,
+          color: AppConstants.limeGreen,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 110),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // App Bar
+                AppBarGlass(
+                  mode: AppBarMode.title,
+                  title: 'Task Management',
+                  subtitle: 'Organize your farming activities',
                 ),
-              ),
+
+                const SizedBox(height: 24),
+
+                // Summary Cards
+                _buildSummaryCards(taskProvider),
+
+                const SizedBox(height: 24),
+
+                // Filter Tabs
+                _buildFilterTabs(),
+
+                const SizedBox(height: 24),
+
+                // New Task Button
+                if (!_showForm)
+                  _buildNewTaskButton()
+                else
+                  const SizedBox.shrink(),
+
+                // Task Form (Conditional)
+                if (_showForm) ...[
+                  const SizedBox(height: 16),
+                  TaskFormWidget(
+                    task: _editingTask,
+                    onSubmit: _handleFormSubmit,
+                    onCancel: _hideForm,
+                  ),
+                  const SizedBox(height: 24),
+                ],
+
+                // Task List
+                if (taskProvider.isLoading)
+                  _buildLoadingState()
+                else if (filteredTasks.isEmpty)
+                  _buildEmptyState()
+                else
+                  _buildTaskList(filteredTasks),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
