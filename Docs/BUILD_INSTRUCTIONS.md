@@ -5,11 +5,13 @@ This project supports multiple build environments (local and production) with di
 ## Environment Configuration
 
 ### Local Environment
+
 - **Base URL:** `http://localhost:8000`
 - **Use Case:** Development and local testing
 - **Entry Point:** `lib/main_local.dart`
 
 ### Production Environment
+
 - **Base URL:** `https://vertexcoreai.com/govi_potha`
 - **Use Case:** Production deployment and testing on real devices
 - **Entry Point:** `lib/main_production.dart`
@@ -19,16 +21,19 @@ This project supports multiple build environments (local and production) with di
 ### 1. Local Development Build
 
 #### Web (Chrome)
+
 ```bash
 flutter run -d chrome -t lib/main_local.dart
 ```
 
 #### Android Debug (Connected Device/Emulator)
+
 ```bash
 flutter run -d android -t lib/main_local.dart
 ```
 
 #### Android Release APK (Local)
+
 ```bash
 flutter build apk --release -t lib/main_local.dart -o build/app-local-release.apk
 ```
@@ -36,21 +41,25 @@ flutter build apk --release -t lib/main_local.dart -o build/app-local-release.ap
 ### 2. Production Build
 
 #### Web (Production)
+
 ```bash
 flutter run -d chrome -t lib/main_production.dart --release
 ```
 
 #### Android Debug (Production - for testing)
+
 ```bash
 flutter run -d android -t lib/main_production.dart
 ```
 
 #### Android Release APK (Production)
+
 ```bash
 flutter build apk --release -t lib/main_production.dart -o build/app-production-release.apk
 ```
 
 #### Android App Bundle (Production - for Play Store)
+
 ```bash
 flutter build appbundle --release -t lib/main_production.dart
 ```
@@ -58,16 +67,19 @@ flutter build appbundle --release -t lib/main_production.dart
 ### 3. Build for Specific Android Architecture
 
 #### ARM64 (most modern devices)
+
 ```bash
 flutter build apk --release -t lib/main_production.dart --target-platform android-arm64 -o build/app-production-arm64.apk
 ```
 
 #### ARM32 (older devices)
+
 ```bash
 flutter build apk --release -t lib/main_production.dart --target-platform android-arm -o build/app-production-arm.apk
 ```
 
 #### Universal APK (all architectures - larger file size)
+
 ```bash
 flutter build apk --release -t lib/main_production.dart --split-per-abi
 ```
@@ -79,16 +91,19 @@ flutter build apk --release -t lib/main_production.dart --split-per-abi
 1. **Connect your Android device via USB**
 2. **Enable USB debugging on the device**
 3. **Verify device is connected:**
+
    ```bash
    flutter devices
    ```
 
 4. **Install and run production build:**
+
    ```bash
    flutter run -d android -t lib/main_production.dart --release
    ```
 
 5. **Or install APK file directly:**
+
    ```bash
    # Build the APK
    flutter build apk --release -t lib/main_production.dart
@@ -138,16 +153,19 @@ The environment is automatically set based on which entry point you use:
 ## Common Issues
 
 ### 1. APK Not Installing
+
 - Make sure USB debugging is enabled on your Android device
 - Check that "Install from unknown sources" is enabled
 - Try uninstalling the previous version first
 
 ### 2. Network Errors in Production
+
 - Verify the production URL is correct: `https://vertexcoreai.com/govi_potha`
 - Check that your Android device has internet access
 - Ensure the backend API is accessible from the internet
 
 ### 3. Different APK for Testing vs Production
+
 - Always build separate APKs for testing and production
 - Use clear naming: `app-local-release.apk` vs `app-production-release.apk`
 
@@ -167,3 +185,29 @@ storeFile=<path-to-keystore>
 ```
 
 For development/testing builds, you can skip this and use debug builds instead of release builds.
+
+# Step 1: Clean all build caches
+
+flutter clean
+
+# Step 2: Clean Android build artifacts
+
+cd android
+./gradlew clean
+cd ..
+
+# Step 3: Remove old build directories (Windows)
+
+if exist build rmdir /s /q build
+if exist android\.gradle rmdir /s /q android\.gradle
+if exist android\app\build rmdir /s /q android\app\build
+if exist android\.idea rmdir /s /q android\.idea
+if exist .dart_tool rmdir /s /q .dart_tool
+
+# Step 4: Get fresh dependencies
+
+flutter pub get
+
+# Step 5: Build and run
+
+flutter run --debug
