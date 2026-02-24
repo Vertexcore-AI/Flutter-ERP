@@ -77,9 +77,16 @@ class _SwipeableNavBarState extends State<SwipeableNavBar> {
     final screenWidth = MediaQuery.of(context).size.width;
     final orientation = MediaQuery.of(context).orientation;
     final isMobile = screenWidth < 600;
+    final isTablet = screenWidth >= 600 && screenWidth < 1200;
     final isLandscape = orientation == Orientation.landscape;
 
-    final effectiveMaxWidth = isMobile ? double.infinity : 400.0;
+    // Wider on tablets, full width on phones and desktop
+    final effectiveMaxWidth = isMobile
+        ? double.infinity  // Phone: full width with padding
+        : isTablet
+            ? screenWidth * 0.7  // Tablet: 70% of screen width
+            : 600.0;  // Desktop: fixed 600px
+
     final navBarHeight = isLandscape ? 70.0 : 80.0;  // Nav bar height
     final baseIconSize = isLandscape ? 22.0 : 24.0;  // Smaller icon size
 

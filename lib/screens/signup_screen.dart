@@ -290,7 +290,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                     ),
                                     const SizedBox(width: 8),
                                     Image.asset(
-                                      AppConstants.logoPath,
+                                      'images/govipotha.png',
                                       width: 32,
                                       height: 32,
                                       errorBuilder: (context, error, stackTrace) {

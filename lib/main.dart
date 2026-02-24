@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'screens/splash_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/email_verification_screen.dart';
 import 'screens/login_screen.dart';
@@ -11,6 +12,7 @@ import 'providers/crop_provider.dart';
 import 'providers/crop_category_provider.dart';
 import 'providers/crop_cycle_provider.dart';
 import 'providers/inventory_provider.dart';
+import 'providers/task_provider.dart';
 import 'config/theme_config.dart';
 import 'services/deep_link_service.dart';
 import 'services/api_client.dart';
@@ -113,6 +115,7 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider<CropCategoryProvider>(create: (_) => CropCategoryProvider()),
         ChangeNotifierProvider<CropCycleProvider>(create: (_) => CropCycleProvider()),
         ChangeNotifierProvider<InventoryProvider>(create: (_) => InventoryProvider()),
+        ChangeNotifierProvider<TaskProvider>(create: (_) => TaskProvider()),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, theme, _) {
@@ -123,7 +126,7 @@ class _MyAppState extends State<MyApp> {
             theme: ThemeConfig.lightTheme,
             darkTheme: ThemeConfig.darkTheme,
             themeMode: theme.themeMode,
-            home: const OnboardingScreen(),
+            home: const SplashScreen(),
             routes: {
               '/login': (context) => const LoginScreen(),
             },

@@ -158,7 +158,9 @@
       "Bash(do if grep -q \"<<<<<<< HEAD\" \"$file\")",
       "Bash(then echo \"Fixing: $file\")",
       "Bash(flutter logs:*)",
-      "Bash(flutter build:*)"
+      "Bash(flutter build:*)",
+      "Bash(flutter pub upgrade:*)",
+      "Bash(flutter doctor:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -278,6 +278,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       // Profile Header Card with Gradient Avatar
                       GlassCard.large(
                         child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             // Large Avatar with Gradient
                             Container(
@@ -339,29 +340,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             const SizedBox(height: 16),
 
                             // Role Badge
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppConstants.forestGreen.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: AppConstants.forestGreen.withValues(alpha: 0.4),
-                                  width: 1.5,
-                                ),
-                              ),
-                              child: Text(
-                                user.role.toUpperCase(),
-                                style: GoogleFonts.spaceGrotesk(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppConstants.forestGreen,
-                                  letterSpacing: 1.2,
-                                ),
-                              ),
-                            ),
+                          
                           ],
                         ),
                       ),
